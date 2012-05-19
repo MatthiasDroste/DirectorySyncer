@@ -1,5 +1,9 @@
 package com.droste.file;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 1. put the target files into a map, key is the filename, value the file. 
  *   Careful: there might be multiple files with the same name
@@ -12,5 +16,21 @@ package com.droste.file;
  */
 public class DirectorySyncer
 {
+	private final File target;
+	private final File source;
+
+	public DirectorySyncer(String source, String target)
+	{
+		this.source = new File(source);
+		this.target = new File(target);
+		assert(this.source.exists() && this.target.exists());
+	}
+
+	public Map<String, File> buildTargetFileMap()
+	{
+		Map<String, File> targetMap = new HashMap<String, File>();
+		
+		return targetMap;
+	}
 	
 }
