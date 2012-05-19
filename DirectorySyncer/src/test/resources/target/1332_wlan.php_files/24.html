@@ -1,0 +1,17 @@
+Schrumpfkopfalarm!
+// Copyright (c) 2002, Legendum LLC and Tiscali SpA. All Rights Reserved.
+
+ss_html = '<img width="1" height="1" src="http://ss.tiscali.com/db.php';
+ss_html += '?site_id=24&page=' + escape(window.location) + '&referrer=' + escape(document.referrer);
+
+if (parseInt(navigator.appVersion) >= 4)
+{
+	var date = new Date();
+
+	ss_html += '&resolution=' + screen.width + 'x' + screen.height;
+	ss_html += '&color_bits=' + screen.colorDepth;
+	ss_html += '&java=' + navigator.javaEnabled();
+	ss_html += '&time=' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+}
+
+document.write(ss_html + '">');
