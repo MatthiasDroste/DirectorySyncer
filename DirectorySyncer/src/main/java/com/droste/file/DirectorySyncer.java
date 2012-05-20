@@ -1,12 +1,14 @@
 package com.droste.file;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 1. put the target files into a map, key is the filename, value the file. 
- *   Careful: there might be multiple files with the same name
+ * 1. put the target files into a map, key is the subpath under target, value the file.
  * 2. for every file in source: see if key exists in targetmap.
  * 2.1 if exists then compare filesize
  * 2.1.1 if equal nothing to do
@@ -16,20 +18,29 @@ import java.util.Map;
  */
 public class DirectorySyncer
 {
-	private final File target;
-	private final File source;
+	private static final LinkOption NFL = LinkOption.NOFOLLOW_LINKS;
+	private final Path target;
+	private final Path source;
 
 	public DirectorySyncer(String source, String target)
 	{
-		this.source = new File(source);
-		this.target = new File(target);
-		assert(this.source.exists() && this.target.exists());
+		this.source = new File(source).toPath();
+		this.target = new File(target).toPath();
+		assert (Files.exists(this.source, NFL) && Files.exists(this.target, NFL));
 	}
 
-	public Map<String, File> buildTargetFileMap()
+	public Map<String, Path> buildTargetFileMap() throws IOException
 	{
-		Map<String, File> targetMap = new HashMap<String, File>();
-		
+		final Map<String, Path> targetMap = new HashMap<String, Path>();
+		Files.walkFileTree(target, new SimpleFileVisitor<Path>()
+		{
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
+			{
+				targetMap.put(target.relativize(file).toString(), file);
+				return super.visitFile(file, attrs);
+			}
+		});
 		return targetMap;
 	}
 	
