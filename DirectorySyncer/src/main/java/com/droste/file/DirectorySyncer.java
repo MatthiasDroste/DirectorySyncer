@@ -8,13 +8,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 1. put the target files into a map, key is the subpath under target, value the file.
- * 2. for every file in source: see if key exists in targetmap.
- * 2.1 if exists then compare filesize
- * 2.1.1 if equal nothing to do
- * 2.1.2 if different copy file from source to target, but add (n) to the name. 
- *   collisiondetection for different n's needed
- * 2.2 if not exists then copy from source to target, keep the subpath.   
+ * 1. put the target files into a map, key is the subpath under target, value the file.<br/>
+ * 2. for every file in source: see if key exists in targetmap. <br/>
+ * 2.1 if exists then compare filesize <br/>
+ * 2.1.1 if equal nothing to do <br/>
+ * 2.1.2 if different copy file from source to target, but add (n) to the name. collisiondetection for different n's
+ * needed <br/>
+ * 2.2 if not exists then copy from source to target, keep the subpath.
  */
 public class DirectorySyncer
 {
@@ -43,5 +43,27 @@ public class DirectorySyncer
 		});
 		return targetMap;
 	}
-	
+
+	public void findSourcesInTargetMap(final Map<String, Path> targetMap) throws IOException
+	{
+		Files.walkFileTree(source, new SimpleFileVisitor<Path>()
+		{
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
+			{
+				Path targetPath = targetMap.get(source.relativize(file).toString());
+				if (targetPath != null) {
+					if (Files.size(file) != Files.size(targetPath)) {
+						int counter = 1;
+						while (Files.exists(targetPath)) {
+							targetPath = new File(targetPath + " (" + (counter++) + ")").toPath();
+						}
+						Files.copy(file, targetPath);
+					}
+				}
+				return super.visitFile(file, attrs);
+			}
+		});
+	}
+
 }
