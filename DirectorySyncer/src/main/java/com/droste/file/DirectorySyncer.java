@@ -44,7 +44,7 @@ public class DirectorySyncer
 		return targetMap;
 	}
 
-	public void findSourcesInTargetMap(final Map<String, Path> targetMap) throws IOException
+	public void findAndHandleSourcesInTargetMap(final Map<String, Path> targetMap) throws IOException
 	{
 		Files.walkFileTree(source, new SimpleFileVisitor<Path>()
 		{
@@ -54,14 +54,26 @@ public class DirectorySyncer
 				Path targetPath = targetMap.get(source.relativize(file).toString());
 				if (targetPath != null) {
 					if (Files.size(file) != Files.size(targetPath)) {
-						int counter = 1;
-						while (Files.exists(targetPath)) {
-							targetPath = new File(targetPath + " (" + (counter++) + ")").toPath();
-						}
-						Files.copy(file, targetPath);
+						handleChangedFile(file, targetPath);
 					}
+				} else {
+					handleNewFile(file);
 				}
 				return super.visitFile(file, attrs);
+			}
+
+			private void handleNewFile(Path file) throws IOException
+			{
+				Files.copy(file, target.resolve(source.relativize(file)));
+			}
+
+			private void handleChangedFile(Path file, Path targetPath) throws IOException
+			{
+				int counter = 1;
+				while (Files.exists(targetPath)) {
+					targetPath = new File(targetPath + " (" + (counter++) + ")").toPath();
+				}
+				Files.copy(file, targetPath);
 			}
 		});
 	}

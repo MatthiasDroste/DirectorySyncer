@@ -35,10 +35,15 @@ public class TestDirectorySyncer
 	@Test
 	public void testFindSourcesSameFileSameSizeDontCopy() throws IOException
 	{
+		Files.delete(target);
+		Files.copy(source, target);
+
 		DirectorySyncer syncer = new DirectorySyncer("src/test/resources/source/same", "src/test/resources/target/same");
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
-
-		syncer.findSourcesInTargetMap(targetMap);
+		assertEquals(1, targetMap.size());
+		syncer.findAndHandleSourcesInTargetMap(targetMap);
+		assertTrue(Files.size(source) == Files.size(target));
+		assertEquals(1, syncer.buildTargetFileMap().size());
 	}
 
 	@Test
@@ -49,14 +54,28 @@ public class TestDirectorySyncer
 		assertEquals(1, targetMap.size());
 
 		assertFalse(Files.size(source) == Files.size(target));
-		syncer.findSourcesInTargetMap(targetMap);
+		syncer.findAndHandleSourcesInTargetMap(targetMap);
 		Path copyOfSource = target.getParent().resolve(target.getFileName() + " (1)");
 		assertTrue(Files.exists(copyOfSource));
 		assertTrue(Files.size(source) == Files.size(copyOfSource));
 	}
 
 	@Test
-	public void testNewFileCopy()
+	public void testNewFileCopy() throws IOException
+	{
+		Files.delete(target);
+
+		DirectorySyncer syncer = new DirectorySyncer(srcDir, targetDir);
+		Map<String, Path> targetMap = syncer.buildTargetFileMap();
+		assertEquals(0, targetMap.size());
+
+		syncer.findAndHandleSourcesInTargetMap(targetMap);
+		assertTrue(Files.exists(target));
+		assertTrue(Files.size(source) == Files.size(target));
+	}
+
+	@Test
+	public void testAll()
 	{
 
 	}
