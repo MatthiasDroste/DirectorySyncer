@@ -62,20 +62,45 @@ public class DirectorySyncer
 				return super.visitFile(file, attrs);
 			}
 
+			@Override
+			public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException
+			{
+				Path newdir = target.resolve(source.relativize(dir));
+				if (!Files.exists(newdir))
+					Files.createDirectory(newdir);
+				return super.preVisitDirectory(dir, attrs);
+			}
+
 			private void handleNewFile(Path file) throws IOException
 			{
 				Files.copy(file, target.resolve(source.relativize(file)));
 			}
 
-			private void handleChangedFile(Path file, Path targetPath) throws IOException
+			private void handleChangedFile(Path file, final Path targetPath) throws IOException
 			{
+				Path newTargetPath = targetPath;
 				int counter = 1;
-				while (Files.exists(targetPath)) {
-					targetPath = new File(targetPath + " (" + (counter++) + ")").toPath();
+				while (Files.exists(newTargetPath)) {
+					String newName = renameDuplicateFile(targetPath, counter);
+					counter++;
+					newTargetPath = targetPath.getParent().resolve(newName);
 				}
-				Files.copy(file, targetPath);
+				Files.copy(file, newTargetPath);
 			}
 		});
 	}
 
+	String renameDuplicateFile(Path file, int counter)
+	{
+		String[] split = file.getFileName().toString().split("\\.");
+		StringBuffer newName = new StringBuffer();
+		for (int i = 0; i < split.length; i++) {
+			newName.append(split[i]);
+			if (i == split.length - 2)
+				newName.append(" (").append(counter).append(")");
+			newName.append(".");
+		}
+		newName.deleteCharAt(newName.length() - 1);
+		return newName.toString();
+	}
 }
