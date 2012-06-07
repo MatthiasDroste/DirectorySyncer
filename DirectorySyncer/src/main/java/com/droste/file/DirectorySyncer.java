@@ -6,6 +6,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
+import com.droste.file.report.*;
 
 /**
  * 1. put the target files into a map, key is the subpath under target, value the file.<br/>
@@ -44,8 +45,9 @@ public class DirectorySyncer
 		return targetMap;
 	}
 
-	public void findAndHandleSourcesInTargetMap(final Map<String, Path> targetMap) throws IOException
+	public Report findAndHandleSourcesInTargetMap(final Map<String, Path> targetMap) throws IOException
 	{
+            final Report report = new Report();
 		Files.walkFileTree(source, new SimpleFileVisitor<Path>()
 		{
 			@Override
@@ -67,13 +69,18 @@ public class DirectorySyncer
 			{
 				Path newdir = target.resolve(source.relativize(dir));
 				if (!Files.exists(newdir))
-					Files.createDirectory(newdir);
-				return super.preVisitDirectory(dir, attrs);
+                                {
+                                    Files.createDirectory(newdir);
+                                    report.addNewDirectory(newdir); 
+                                }
+                                return super.preVisitDirectory(dir, attrs);
 			}
 
 			private void handleNewFile(Path file) throws IOException
 			{
-				Files.copy(file, target.resolve(source.relativize(file)));
+                                final Path newTargetPath = target.resolve(source.relativize(file));
+				Files.copy(file, newTargetPath);
+                                report.addNewFile(file, newTargetPath);
 			}
 
 			private void handleChangedFile(Path file, final Path targetPath) throws IOException
@@ -86,14 +93,16 @@ public class DirectorySyncer
 					newTargetPath = targetPath.getParent().resolve(newName);
 				}
 				Files.copy(file, newTargetPath);
+                                report.addChangedFile(file, newTargetPath);
 			}
 		});
+                return report;
 	}
 
 	String renameDuplicateFile(Path file, int counter)
 	{
 		String[] split = file.getFileName().toString().split("\\.");
-		StringBuffer newName = new StringBuffer();
+		StringBuilder newName = new StringBuilder();
 		for (int i = 0; i < split.length; i++) {
 			newName.append(split[i]);
 			if (i == split.length - 2)
