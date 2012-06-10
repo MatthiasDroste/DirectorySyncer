@@ -22,7 +22,6 @@ public class DirectorySyncer
 	private static final LinkOption NFL = LinkOption.NOFOLLOW_LINKS;
 	private final Path target;
 	private final Path source;
-        private final long startTime = System.currentTimeMillis();
 
 	public DirectorySyncer(String source, String target)
 	{
@@ -97,7 +96,6 @@ public class DirectorySyncer
                                 report.addChangedFile(file, newTargetPath);
 			}
 		});
-                report.setSyncTime(System.currentTimeMillis() - startTime);
                 return report;
 	}
 
