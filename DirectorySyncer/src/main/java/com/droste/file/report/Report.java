@@ -6,6 +6,11 @@ package com.droste.file.report;
 
 import java.nio.file.Path;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.Duration;
 
 /**
  * Contains the results of a synchronization
@@ -17,6 +22,7 @@ public class Report {
     private Map<Path, Path> newFiles = new HashMap<Path, Path>();
     private List<Path> newDirectories = new ArrayList<Path>();
     private int noOfNewDirectories = 0;
+    private double syncTimeInSeconds = 0.0;
     
     public void addChangedFile(Path file, Path newTargetPath) {
         noOfChangedFiles++;
@@ -59,5 +65,24 @@ public class Report {
     
     public List<Path> getNewDirectories() {
         return Collections.unmodifiableList(newDirectories);
+    }
+
+    public int getNoOfChanges() {
+        return getNoOfChangedFiles() + getNoOfNewDirectories() + getNoOfNewFiles();
+    }
+
+    public double getSyncTime() {
+        return syncTimeInSeconds;
+    }
+
+    public void setSyncTime(long timeDiffInMillis) {
+        try {
+            DatatypeFactory datatypeFactory = DatatypeFactory.newInstance();
+            Duration duration = datatypeFactory.newDuration(timeDiffInMillis);
+            this.syncTimeInSeconds = duration.getSeconds();
+            if (syncTimeInSeconds == 0) syncTimeInSeconds = timeDiffInMillis/1000;
+        } catch (DatatypeConfigurationException ex) {
+            Logger.getLogger(Report.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
