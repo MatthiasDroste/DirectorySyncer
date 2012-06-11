@@ -23,12 +23,13 @@ public class DirectorySyncer
 	private final Path target;
 	private final Path source;
         private final long startTime = System.currentTimeMillis();
-
+        private final Report report; 
 	public DirectorySyncer(String source, String target)
 	{
 		this.source = new File(source).toPath();
 		this.target = new File(target).toPath();
 		assert (Files.exists(this.source, NFL) && Files.exists(this.target, NFL));
+            this.report = new Report();
 	}
 
 	public Map<String, Path> buildTargetFileMap() throws IOException
@@ -39,6 +40,7 @@ public class DirectorySyncer
 			@Override
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
 			{
+                                report.countTargetFiles();
 				targetMap.put(target.relativize(file).toString(), file);
 				return super.visitFile(file, attrs);
 			}
@@ -48,12 +50,12 @@ public class DirectorySyncer
 
 	public Report findAndHandleSourcesInTargetMap(final Map<String, Path> targetMap) throws IOException
 	{
-            final Report report = new Report();
 		Files.walkFileTree(source, new SimpleFileVisitor<Path>()
 		{
 			@Override
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
 			{
+                            report.countSourceFiles();
 				Path targetPath = targetMap.get(source.relativize(file).toString());
 				if (targetPath != null) {
 					if (Files.size(file) != Files.size(targetPath)) {
@@ -68,6 +70,7 @@ public class DirectorySyncer
 			@Override
 			public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException
 			{
+                            report.countDirectories();
 				Path newdir = target.resolve(source.relativize(dir));
 				if (!Files.exists(newdir))
                                 {

@@ -135,6 +135,10 @@ public class TestDirectorySyncer
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
 		assertEquals(19, syncer.buildTargetFileMap().size());
                 checkReport(report, 2, 9, 1);
+                assertEquals(27, report.getNoOfTargetFiles());
+                assertEquals(14, report.getNoOfSourceFiles());
+                assertEquals(4, report.getNoOfSourceDirectories());
+                assertTrue("report time was " + report.getSyncTime(), report.getSyncTime() > 0.0 && report.getSyncTime() < 1.0);
 	}
         
         

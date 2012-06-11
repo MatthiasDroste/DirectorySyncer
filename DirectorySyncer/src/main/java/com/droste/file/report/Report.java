@@ -23,6 +23,9 @@ public class Report {
     private List<Path> newDirectories = new ArrayList<Path>();
     private int noOfNewDirectories = 0;
     private double syncTimeInSeconds = 0.0;
+    private int noOfSourceFiles = 0;
+    private int noOfSourceDirectories = 0;
+    private int noOfTargetFiles = 0;
     
     public void addChangedFile(Path file, Path newTargetPath) {
         noOfChangedFiles++;
@@ -80,9 +83,35 @@ public class Report {
             DatatypeFactory datatypeFactory = DatatypeFactory.newInstance();
             Duration duration = datatypeFactory.newDuration(timeDiffInMillis);
             this.syncTimeInSeconds = duration.getSeconds();
-            if (syncTimeInSeconds == 0) syncTimeInSeconds = timeDiffInMillis/1000;
+            if (syncTimeInSeconds == 0) syncTimeInSeconds = timeDiffInMillis/1000.0;
         } catch (DatatypeConfigurationException ex) {
             Logger.getLogger(Report.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    public void countSourceFiles() {
+        noOfSourceFiles++;
+    }
+    
+    public int getNoOfSourceFiles()
+    {
+        return noOfSourceFiles;
+    }
+
+    public void countDirectories() {
+        noOfSourceDirectories++;
+    }
+    
+    public int getNoOfSourceDirectories(){
+        return noOfSourceDirectories;
+    }
+
+    public void countTargetFiles() {
+        noOfTargetFiles++;
+    }
+    
+    public int getNoOfTargetFiles()
+    {
+        return noOfTargetFiles;
     }
 }
