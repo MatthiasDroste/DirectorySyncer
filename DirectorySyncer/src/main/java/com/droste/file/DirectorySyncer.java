@@ -104,7 +104,6 @@ public class DirectorySyncer
                                 report.addChangedFile(file, newTargetPath);
 			}
 		});
-                report.setSyncTime(System.currentTimeMillis() - startTime);
                 return report;
 	}
 
