@@ -23,11 +23,14 @@ public class DirectorySyncer
 	private final Path target;
 	private final Path source;
         private final long startTime = System.currentTimeMillis();
-        private final Report report; 
-	public DirectorySyncer(String source, String target)
+        private final Report report;
+        private final boolean isSimulationMode;
+	public DirectorySyncer(String source, String target, boolean isSimulationMode)
 	{
 		this.source = new File(source).toPath();
 		this.target = new File(target).toPath();
+                this.isSimulationMode = isSimulationMode;
+                        
 		assert (Files.exists(this.source, NFL) && Files.exists(this.target, NFL));
             this.report = new Report();
 	}
@@ -74,7 +77,7 @@ public class DirectorySyncer
 				Path newdir = target.resolve(source.relativize(dir));
 				if (!Files.exists(newdir))
                                 {
-                                    Files.createDirectory(newdir);
+                                    if (!isSimulationMode) Files.createDirectory(newdir);
                                     report.addNewDirectory(newdir); 
                                 }
                                 return super.preVisitDirectory(dir, attrs);
@@ -83,7 +86,7 @@ public class DirectorySyncer
 			private void handleNewFile(Path file) throws IOException
 			{
                                 final Path newTargetPath = target.resolve(source.relativize(file));
-				Files.copy(file, newTargetPath);
+				if (!isSimulationMode) Files.copy(file, newTargetPath);
                                 report.addNewFile(file, newTargetPath);
 			}
 
@@ -92,11 +95,12 @@ public class DirectorySyncer
 				Path newTargetPath = targetPath;
 				int counter = 1;
 				while (Files.exists(newTargetPath)) {
+                                        if (Files.size(newTargetPath) == Files.size(file)) return;
 					String newName = renameDuplicateFile(targetPath, counter);
 					counter++;
 					newTargetPath = targetPath.getParent().resolve(newName);
 				}
-				Files.copy(file, newTargetPath);
+				if (!isSimulationMode) Files.copy(file, newTargetPath);
                                 report.addChangedFile(file, newTargetPath);
 			}
 		});

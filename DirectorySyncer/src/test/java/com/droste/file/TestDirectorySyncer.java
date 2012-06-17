@@ -38,7 +38,7 @@ public class TestDirectorySyncer
 	@Test
 	public void testBuildTargetFileMap() throws IOException
 	{
-		DirectorySyncer syncer = new DirectorySyncer("src/test/resources/source", "src/test/resources/target");
+		DirectorySyncer syncer = new DirectorySyncer("src/test/resources/source", "src/test/resources/target", false);
 		assertNotNull(syncer);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(8, targetMap.size());
@@ -50,7 +50,7 @@ public class TestDirectorySyncer
 		Files.delete(targetFile);
 		Files.copy(sourceFile, targetFile);
 
-		DirectorySyncer syncer = new DirectorySyncer("src/test/resources/source/same", "src/test/resources/target/same");
+		DirectorySyncer syncer = new DirectorySyncer("src/test/resources/source/same", "src/test/resources/target/same", false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(1, targetMap.size());
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
@@ -64,7 +64,7 @@ public class TestDirectorySyncer
 	@Test
 	public void testRenameDuplicateFile()
 	{
-		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir);
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		assertEquals("einsteiger.php (1).html", syncer.renameDuplicateFile(sourceFile, 1));
 		assertEquals("einsteiger.php (2).html", syncer.renameDuplicateFile(sourceFile, 2));
 	}
@@ -73,7 +73,7 @@ public class TestDirectorySyncer
 	public void testRenameWithExistingDuplicates() throws IOException
 	{
 		Files.copy(targetFile, new File(tempTargetDir + "/" + "einsteiger.php (1).html").toPath());
-		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir);
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(2, targetMap.size());
                 Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
@@ -86,11 +86,27 @@ public class TestDirectorySyncer
                 assertTrue(theEntry.getKey().endsWith("einsteiger.php.html"));
                 assertTrue(theEntry.getValue().endsWith("einsteiger.php (2).html"));
 	}
+        
+        /** if there was a sync before, the source file would already have been copied, but renamed.
+         Find the renamed copy and don't copy again */ 
+        @Test
+	public void testNoRenameWithExistingDuplicates() throws IOException
+	{
+		Files.copy(sourceFile, new File(tempTargetDir + "/" + "einsteiger.php (1).html").toPath());
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
+		Map<String, Path> targetMap = syncer.buildTargetFileMap();
+		assertEquals(2, targetMap.size());
+                Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
+
+		assertFalse(Files.exists(new File("temp2/einsteiger.php (2).html").toPath()));
+		assertEquals(2, syncer.buildTargetFileMap().size());
+                checkReport(report,0,0,0);
+	}
 
 	@Test
 	public void testDifferentFileSizeCopy() throws IOException
 	{
-		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir);
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(1, targetMap.size());
 
@@ -110,7 +126,7 @@ public class TestDirectorySyncer
 	{
 		Files.delete(targetFile);
 
-		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir);
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(0, targetMap.size());
 
@@ -128,14 +144,14 @@ public class TestDirectorySyncer
 		copyDirectory(rootSource, tempSrcDir);
 		copyDirectory(rootTarget, tempTargetDir);
 
-		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir);
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(8, targetMap.size());
 
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
-		assertEquals(19, syncer.buildTargetFileMap().size());
-                checkReport(report, 2, 9, 1);
-                assertEquals(27, report.getNoOfTargetFiles());
+		assertEquals(18, syncer.buildTargetFileMap().size());
+                checkReport(report, 1, 9, 1);
+                assertEquals(26, report.getNoOfTargetFiles());
                 assertEquals(14, report.getNoOfSourceFiles());
                 assertEquals(4, report.getNoOfSourceDirectories());
                 assertTrue("report time was " + report.getSyncTime(), report.getSyncTime() > 0.0 && report.getSyncTime() < 1.0);
@@ -202,7 +218,7 @@ public class TestDirectorySyncer
 	{
 		Path path = new File(tempDir).toPath();
 		if (!Files.exists(path))
-			path = Files.createDirectory(path);
+			Files.createDirectory(path);
 		final Path source = new File(filePath).toPath();
 		Path target = new File(tempDir + "/" + source.getFileName()).toPath();
 		Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
