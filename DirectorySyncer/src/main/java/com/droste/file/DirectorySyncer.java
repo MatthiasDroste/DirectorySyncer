@@ -7,15 +7,22 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import com.droste.file.report.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.zip.Adler32;
 
 /**
  * 1. put the target files into a map, key is the subpath under target, value the file.<br/>
  * 2. for every file in source: see if key exists in targetmap. <br/>
- * 2.1 if exists then compare filesize <br/>
+ * 2.1 if exists then compare hash <br/>
  * 2.1.1 if equal nothing to do <br/>
  * 2.1.2 if different copy file from source to target, but add (n) to the name. collisiondetection for different n's
  * needed <br/>
- * 2.2 if not exists then copy from source to target, keep the subpath.
+ * 2.2.1 if not exists then copy from source to target, keep the subpath.
+ * 2.2.2 BUT (perhaps optional): search for file(hash) in the whole target. if exists && if source doesn't have 
+ * something at the same spot then we asume there was a move in the target and don't copy.
  */
 public class DirectorySyncer
 {
@@ -25,6 +32,8 @@ public class DirectorySyncer
         private final long startTime = System.currentTimeMillis();
         private final Report report;
         private final boolean isSimulationMode;
+        private final Map<Long, Path> hashedTargetMap = new HashMap<Long, Path>();
+        private final Adler32 adler = new Adler32();
 	public DirectorySyncer(String source, String target, boolean isSimulationMode)
 	{
 		this.source = new File(source).toPath();
@@ -40,13 +49,16 @@ public class DirectorySyncer
 		final Map<String, Path> targetMap = new HashMap<String, Path>();
 		Files.walkFileTree(target, new SimpleFileVisitor<Path>()
 		{
-			@Override
-			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
-			{
-                                report.countTargetFiles();
-				targetMap.put(target.relativize(file).toString(), file);
-				return super.visitFile(file, attrs);
-			}
+		    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        report.countTargetFiles();
+                        targetMap.put(target.relativize(file).toString(), file);
+                        Long hash = hash(file);
+                        if (hash != null) {
+                            hashedTargetMap.put(hash, file);
+                        }
+                        return super.visitFile(file, attrs);
+                    }
 		});
 		return targetMap;
 	}
@@ -121,4 +133,22 @@ public class DirectorySyncer
 		newName.deleteCharAt(newName.length() - 1);
 		return newName.toString();
 	}
+
+    private Long hash(Path file) 
+    {
+        try {
+            adler.update(Files.readAllBytes(file));
+            long value = adler.getValue();
+            adler.reset();
+            return value;
+        } catch (IOException ex) {
+            Logger.getLogger(DirectorySyncer.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+    
+    public Map<Long, Path> getHashedTargetMap()
+    {
+        return Collections.unmodifiableMap(hashedTargetMap);
+    }
 }

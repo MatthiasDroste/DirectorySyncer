@@ -1,16 +1,19 @@
 package com.droste.file;
 
 import com.droste.file.report.Report;
+import java.io.BufferedInputStream;
 import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.zip.Adler32;
 
 import org.junit.*;
 
@@ -34,7 +37,20 @@ public class TestDirectorySyncer
 		cleanup(tempSrcDir);
 		cleanup(tempTargetDir);
 	}
-
+        
+        @Test
+        public void testAdler32Checksum() throws IOException
+        {
+            Adler32 adler = new Adler32();
+            long value;
+            for (int i = 0; i < 10000; i++) {
+                adler.update(Files.readAllBytes(targetFile));
+                value = adler.getValue();
+                System.out.println(value);
+                adler.reset();
+            }
+        }
+        
 	@Test
 	public void testBuildTargetFileMap() throws IOException
 	{
@@ -42,6 +58,8 @@ public class TestDirectorySyncer
 		assertNotNull(syncer);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(8, targetMap.size());
+                //los gif exists twice in different locations:
+                assertEquals(7, syncer.getHashedTargetMap().size());
 	}
 
 	@Test
@@ -96,6 +114,7 @@ public class TestDirectorySyncer
 		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(2, targetMap.size());
+                assertEquals(2, syncer.getHashedTargetMap().size());
                 Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
 
 		assertFalse(Files.exists(new File("temp2/einsteiger.php (2).html").toPath()));
@@ -109,6 +128,7 @@ public class TestDirectorySyncer
 		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(1, targetMap.size());
+                assertEquals(1, syncer.getHashedTargetMap().size());
 
 		assertFalse(Files.size(sourceFile) == Files.size(targetFile));
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
@@ -147,6 +167,7 @@ public class TestDirectorySyncer
 		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(8, targetMap.size());
+                assertEquals(7, syncer.getHashedTargetMap().size());
 
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
 		assertEquals(18, syncer.buildTargetFileMap().size());
