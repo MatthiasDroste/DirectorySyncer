@@ -155,6 +155,25 @@ public class TestDirectorySyncer
 		assertTrue(Files.size(sourceFile) == Files.size(targetFile));
                 checkReport(report, 0,1,0);
 	}
+        
+     /**
+     * search for file(hash) in the whole target. if exists then we asume there was a move in the
+     * target and don't copy.
+     */
+    @Test
+    public void testFileWasMovedDontCopy() throws IOException 
+    {
+        Files.delete(targetFile);
+        createTempFile(tempTargetDir + "/newLocation", "src/test/resources/source/einsteiger.php.html");
+        createTempFile(tempSrcDir + "/duplicate", "src/test/resources/source/einsteiger.php.html");
+        createTempFile(tempTargetDir + "/duplicate", "src/test/resources/source/einsteiger.php.html");
+        DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
+		Map<String, Path> targetMap = syncer.buildTargetFileMap();
+		assertEquals(2, targetMap.size());
+        assertEquals(1, syncer.getHashedTargetMap().size());
+        Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
+        assertEquals(1, report.getNoOfMovedFiles());
+    }
 
 	@Test
 	public void testAll() throws IOException
@@ -167,9 +186,12 @@ public class TestDirectorySyncer
 		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(8, targetMap.size());
-                assertEquals(7, syncer.getHashedTargetMap().size());
+        assertEquals(7, syncer.getHashedTargetMap().size());
 
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
+        //TODO failed, da wir vor kopie auf existenz im hash checken. Die Hashmap filtert aber duplicates, d.h.
+        //TODO wenn ein file im source mehrfach, im Target einfach vorkommt, wird es nicht kopiert werden.
+        //TODO target
 		assertEquals(18, syncer.buildTargetFileMap().size());
                 checkReport(report, 1, 9, 1);
                 assertEquals(26, report.getNoOfTargetFiles());

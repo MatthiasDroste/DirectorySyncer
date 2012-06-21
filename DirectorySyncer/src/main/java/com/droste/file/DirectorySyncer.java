@@ -21,8 +21,7 @@ import java.util.zip.Adler32;
  * 2.1.2 if different copy file from source to target, but add (n) to the name. collisiondetection for different n's
  * needed <br/>
  * 2.2.1 if not exists then copy from source to target, keep the subpath.
- * 2.2.2 BUT (perhaps optional): search for file(hash) in the whole target. if exists && if source doesn't have 
- * something at the same spot then we asume there was a move in the target and don't copy.
+ * 2.2.2 BUT (perhaps optional): search for file(hash) in the whole target. if exists then we asume there was a move in the target and don't copy.
  */
 public class DirectorySyncer
 {
@@ -34,6 +33,7 @@ public class DirectorySyncer
         private final boolean isSimulationMode;
         private final Map<Long, Path> hashedTargetMap = new HashMap<Long, Path>();
         private final Adler32 adler = new Adler32();
+        
 	public DirectorySyncer(String source, String target, boolean isSimulationMode)
 	{
 		this.source = new File(source).toPath();
@@ -77,7 +77,8 @@ public class DirectorySyncer
 						handleChangedFile(file, targetPath);
 					}
 				} else {
-					handleNewFile(file);
+                    if (!checkIfMoved(file))
+                        handleNewFile(file);
 				}
 				return super.visitFile(file, attrs);
 			}
@@ -115,6 +116,17 @@ public class DirectorySyncer
 				if (!isSimulationMode) Files.copy(file, newTargetPath);
                                 report.addChangedFile(file, newTargetPath);
 			}
+
+            private boolean checkIfMoved(Path file) {
+                Long hash = hash(file);
+                Path fileInTarget = hashedTargetMap.get(hash);
+                if(fileInTarget != null && fileInTarget.getFileName().equals(file.getFileName()))
+                {
+                    report.addMovedFile(file);
+                    return true;
+                }
+                return false;
+            }
 		});
                 report.setSyncTime(System.currentTimeMillis() - startTime);
                 return report;

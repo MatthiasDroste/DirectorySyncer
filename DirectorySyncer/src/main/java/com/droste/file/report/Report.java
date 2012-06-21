@@ -26,6 +26,8 @@ public class Report {
     private int noOfSourceFiles = 0;
     private int noOfSourceDirectories = 0;
     private int noOfTargetFiles = 0;
+    private int noOfMovedFiles = 0;
+    private List<Path> movedFiles = new ArrayList<Path>();;
     
     public void addChangedFile(Path file, Path newTargetPath) {
         noOfChangedFiles++;
@@ -40,6 +42,12 @@ public class Report {
     public void addNewDirectory(Path newdir) {
         noOfNewDirectories++;
         newDirectories.add(newdir);
+    }
+    
+    public void addMovedFile(Path movedFile)
+    {
+        noOfMovedFiles++;
+        movedFiles.add(movedFile);
     }
 
     public int getNoOfChangedFiles()
@@ -68,6 +76,13 @@ public class Report {
     
     public List<Path> getNewDirectories() {
         return Collections.unmodifiableList(newDirectories);
+    }
+    
+    /**
+     * List of files that have a new location in the target => nothing copied for them.
+     */
+    public List<Path> getMovedFiles() {
+        return Collections.unmodifiableList(movedFiles);
     }
 
     public int getNoOfChanges() {
@@ -113,5 +128,11 @@ public class Report {
     public int getNoOfTargetFiles()
     {
         return noOfTargetFiles;
+    }
+    
+    /** files that had a new location in the target and were not copied */
+    public int getNoOfMovedFiles()
+    {
+        return noOfMovedFiles;
     }
 }
