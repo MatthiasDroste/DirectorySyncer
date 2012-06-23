@@ -31,6 +31,7 @@ public class MainFrame extends javax.swing.JFrame {
 
 	private Report report;
         private Font defaultFont;
+        private boolean isSimulationMode = false;
         
         public Font getDefaultFont()
         {
@@ -81,6 +82,7 @@ public class MainFrame extends javax.swing.JFrame {
         targetDirectoryField = new javax.swing.JTextField();
         sourceButton = new javax.swing.JButton();
         targetButton = new javax.swing.JButton();
+        simulationModeCheck = new javax.swing.JCheckBox();
         synchronizeButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -113,6 +115,15 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
 
+        simulationModeCheck.setBackground(new java.awt.Color(255, 255, 255));
+        simulationModeCheck.setText("Simulation Mode");
+        simulationModeCheck.setToolTipText("Use this to get a report on what changes would be done without copying anything");
+        simulationModeCheck.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                simulationModeCheckActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -120,16 +131,19 @@ public class MainFrame extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel2))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(sourceDirectoyField, javax.swing.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
-                    .addComponent(targetDirectoryField))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(sourceButton)
-                    .addComponent(targetButton))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel2))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(sourceDirectoyField, javax.swing.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
+                            .addComponent(targetDirectoryField))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(sourceButton)
+                            .addComponent(targetButton)))
+                    .addComponent(simulationModeCheck))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -145,6 +159,8 @@ public class MainFrame extends javax.swing.JFrame {
                     .addComponent(jLabel2)
                     .addComponent(targetDirectoryField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(targetButton))
+                .addGap(18, 18, 18)
+                .addComponent(simulationModeCheck)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -170,10 +186,10 @@ public class MainFrame extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGap(18, 18, 18)
                 .addComponent(synchronizeButton)
-                .addContainerGap(21, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         pack();
@@ -195,7 +211,7 @@ public class MainFrame extends javax.swing.JFrame {
         final String sourceDir = sourceDirectoyField.getText();
         final String targetDir = targetDirectoryField.getText();
         if (sourceDir != null && targetDir != null) {
-            DirectorySyncer directorySyncer = new DirectorySyncer(sourceDir, targetDir);
+            DirectorySyncer directorySyncer = new DirectorySyncer(sourceDir, targetDir, isSimulationMode);
             try {
                 Map<String, Path> targetMap = directorySyncer.buildTargetFileMap();
 				this.report = directorySyncer.findAndHandleSourcesInTargetMap(targetMap);
@@ -214,6 +230,10 @@ public class MainFrame extends javax.swing.JFrame {
 
         }
     }//GEN-LAST:event_synchronizeButtonActionPerformed
+
+    private void simulationModeCheckActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_simulationModeCheckActionPerformed
+        this.isSimulationMode = true;
+    }//GEN-LAST:event_simulationModeCheckActionPerformed
 
     
 
@@ -265,6 +285,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JCheckBox simulationModeCheck;
     private javax.swing.JButton sourceButton;
     private javax.swing.JTextField sourceDirectoyField;
     private javax.swing.JButton synchronizeButton;
@@ -275,4 +296,8 @@ public class MainFrame extends javax.swing.JFrame {
 	{
 		return this.report;
 	}
+
+    boolean isSimulationMode() {
+        return isSimulationMode;
+    }
 }
