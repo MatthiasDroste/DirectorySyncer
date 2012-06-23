@@ -22,6 +22,10 @@ import java.util.zip.Adler32;
  * needed <br/>
  * 2.2.1 if not exists then copy from source to target, keep the subpath.
  * 2.2.2 BUT (perhaps optional): search for file(hash) in the whole target. if exists then we asume there was a move in the target and don't copy.
+ * 2.2.2.1 Problem 1: Licence-files: ProductX is with licence1 in target, productY should be synced from the source. 
+ *         the licence must be in the target!
+ * 2.2.2.2 problem 2: mp3-folder was renamed/moved in target. The old location must not be resynced from the source.
+ * => compare with siblings, offer (un)do in results-dialog
  */
 public class DirectorySyncer
 {
