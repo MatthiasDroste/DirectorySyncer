@@ -1,21 +1,18 @@
 package com.droste.file;
 
-import com.droste.file.report.Report;
-import java.io.BufferedInputStream;
 import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.zip.Adler32;
 
 import org.junit.*;
+
+import com.droste.file.report.Report;
 
 public class TestDirectorySyncer
 {
@@ -37,20 +34,20 @@ public class TestDirectorySyncer
 		cleanup(tempSrcDir);
 		cleanup(tempTargetDir);
 	}
-        
-        @Test
-        public void testAdler32Checksum() throws IOException
-        {
-            Adler32 adler = new Adler32();
-            long value;
-            for (int i = 0; i < 10000; i++) {
-                adler.update(Files.readAllBytes(targetFile));
-                value = adler.getValue();
-                System.out.println(value);
-                adler.reset();
-            }
-        }
-        
+
+	@Test
+	public void testAdler32Checksum() throws IOException
+	{
+		long time = System.currentTimeMillis();
+		Adler32 adler = new Adler32();
+		for (int i = 0; i < 1000; i++) {
+			adler.update(Files.readAllBytes(targetFile));
+			adler.getValue();
+			adler.reset();
+		}
+		assertTrue(System.currentTimeMillis() - time < 1000);
+	}
+
 	@Test
 	public void testBuildTargetFileMap() throws IOException
 	{
@@ -58,8 +55,8 @@ public class TestDirectorySyncer
 		assertNotNull(syncer);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(8, targetMap.size());
-                //los gif exists twice in different locations:
-                assertEquals(7, syncer.getHashedTargetMap().size());
+		// los gif exists twice in different locations:
+		assertEquals(7, syncer.getHashedTargetMap().size());
 	}
 
 	@Test
@@ -68,15 +65,16 @@ public class TestDirectorySyncer
 		Files.delete(targetFile);
 		Files.copy(sourceFile, targetFile);
 
-		DirectorySyncer syncer = new DirectorySyncer("src/test/resources/source/same", "src/test/resources/target/same", false);
+		DirectorySyncer syncer = new DirectorySyncer("src/test/resources/source/same",
+				"src/test/resources/target/same", false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(1, targetMap.size());
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
 		assertTrue(Files.size(sourceFile) == Files.size(targetFile));
 		assertEquals(1, syncer.buildTargetFileMap().size());
-                assertEquals(0, report.getNoOfChangedFiles());
-                assertEquals(0, report.getNoOfNewFiles());
-                assertEquals(0, report.getNoOfNewDirectories());
+		assertEquals(0, report.getNoOfChangedFiles());
+		assertEquals(0, report.getNoOfNewFiles());
+		assertEquals(0, report.getNoOfNewDirectories());
 	}
 
 	@Test
@@ -94,32 +92,34 @@ public class TestDirectorySyncer
 		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(2, targetMap.size());
-                Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
+		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
 
 		assertTrue(Files.exists(new File("temp2/einsteiger.php (2).html").toPath()));
 		assertEquals(3, syncer.buildTargetFileMap().size());
-                
-                checkReport(report,1,0,0);
-                final Entry<Path, Path> theEntry = report.getChangedFiles().entrySet().iterator().next();
-                assertTrue(theEntry.getKey().endsWith("einsteiger.php.html"));
-                assertTrue(theEntry.getValue().endsWith("einsteiger.php (2).html"));
+
+		checkReport(report, 1, 0, 0);
+		final Entry<Path, Path> theEntry = report.getChangedFiles().entrySet().iterator().next();
+		assertTrue(theEntry.getKey().endsWith("einsteiger.php.html"));
+		assertTrue(theEntry.getValue().endsWith("einsteiger.php (2).html"));
 	}
-        
-        /** if there was a sync before, the source file would already have been copied, but renamed.
-         Find the renamed copy and don't copy again */ 
-        @Test
+
+	/**
+	 * if there was a sync before, the source file would already have been copied, but renamed. Find the renamed copy
+	 * and don't copy again
+	 */
+	@Test
 	public void testNoRenameWithExistingDuplicates() throws IOException
 	{
 		Files.copy(sourceFile, new File(tempTargetDir + "/" + "einsteiger.php (1).html").toPath());
 		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(2, targetMap.size());
-                assertEquals(2, syncer.getHashedTargetMap().size());
-                Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
+		assertEquals(2, syncer.getHashedTargetMap().size());
+		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
 
 		assertFalse(Files.exists(new File("temp2/einsteiger.php (2).html").toPath()));
 		assertEquals(2, syncer.buildTargetFileMap().size());
-                checkReport(report,0,0,0);
+		checkReport(report, 0, 0, 0);
 	}
 
 	@Test
@@ -128,17 +128,17 @@ public class TestDirectorySyncer
 		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(1, targetMap.size());
-                assertEquals(1, syncer.getHashedTargetMap().size());
+		assertEquals(1, syncer.getHashedTargetMap().size());
 
 		assertFalse(Files.size(sourceFile) == Files.size(targetFile));
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
 		Path copyOfSource = targetFile.getParent().resolve("einsteiger.php (1).html");
 		assertTrue(Files.exists(copyOfSource));
 		assertTrue(Files.size(sourceFile) == Files.size(copyOfSource));
-                checkReport(report,1,0,0);
-                final Entry<Path, Path> theEntry = report.getChangedFiles().entrySet().iterator().next();
-                assertTrue(theEntry.getKey().endsWith("einsteiger.php.html"));
-                assertTrue(theEntry.getValue().endsWith("einsteiger.php (1).html"));
+		checkReport(report, 1, 0, 0);
+		final Entry<Path, Path> theEntry = report.getChangedFiles().entrySet().iterator().next();
+		assertTrue(theEntry.getKey().endsWith("einsteiger.php.html"));
+		assertTrue(theEntry.getValue().endsWith("einsteiger.php (1).html"));
 	}
 
 	@Test
@@ -153,27 +153,94 @@ public class TestDirectorySyncer
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
 		assertTrue(Files.exists(targetFile));
 		assertTrue(Files.size(sourceFile) == Files.size(targetFile));
-                checkReport(report, 0,1,0);
+		checkReport(report, 0, 1, 0);
 	}
-        
-     /**
-     * search for file(hash) in the whole target. if exists then we asume there was a move in the
-     * target and don't copy.
-     */
-    @Test
-    public void testFileWasMovedDontCopy() throws IOException 
-    {
-        Files.delete(targetFile);
-        createTempFile(tempTargetDir + "/newLocation", "src/test/resources/source/einsteiger.php.html");
-        createTempFile(tempSrcDir + "/duplicate", "src/test/resources/source/einsteiger.php.html");
-        createTempFile(tempTargetDir + "/duplicate", "src/test/resources/source/einsteiger.php.html");
-        DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
+
+	/**
+	 * Search for file(hash) in the whole target. if exists then <br/>
+	 * 1. check if the new location is in the source, too. If so, copy, because it's an add-on.<br/>
+	 * 2. else Compare the siblings in the source with the new target location. If all siblings are at the new location
+	 * in the target, too, we assume a move and don't copy.
+	 */
+	@Test
+	public void testFileWasMovedSiblingsTooDontCopy() throws IOException
+	{
+		Files.delete(targetFile);
+		Files.delete(sourceFile);
+		createTempFile(tempTargetDir + "/newLocation", "src/test/resources/source/einsteiger.php.html");
+		createTempFile(tempTargetDir + "/newLocation", "src/test/resources/source/links.html");
+		createTempFile(tempTargetDir + "/newLocation", "src/test/resources/source/martin.html");
+		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/einsteiger.php.html");
+		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/links.html");
+		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/martin.html");
+
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
+		Map<String, Path> targetMap = syncer.buildTargetFileMap();
+		assertEquals(3, targetMap.size());
+		assertEquals(3, syncer.getHashedTargetMap().size());
+		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
+		assertEquals(0, report.getNoOfNewFiles());
+		assertEquals(3, report.getNoOfRelocatedFiles());
+	}
+
+	@Test
+	public void testFileWasMovedSiblingsNotCopy() throws IOException
+	{
+		Files.delete(targetFile);
+		Files.delete(sourceFile);
+		createTempFile(tempTargetDir + "/newLocation", "src/test/resources/source/einsteiger.php.html");
+		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/einsteiger.php.html");
+		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/links.html");
+		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/martin.html");
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
+		Map<String, Path> targetMap = syncer.buildTargetFileMap();
+		assertEquals(1, targetMap.size());
+		assertEquals(1, syncer.getHashedTargetMap().size());
+		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
+		assertEquals(3, report.getNoOfNewFiles());
+		assertEquals(0, report.getNoOfRelocatedFiles());
+		assertEquals(1, report.getAdditionalFiles().size());
+		assertEquals("einsteiger.php.html", report.getAdditionalFiles().get(0).getFileName().toString());
+	}
+
+	@Test
+	public void testFileWasMovedButSourceHasNewLocationCopy() throws IOException
+	{
+		Files.delete(targetFile);
+		Files.delete(sourceFile);
+		createTempFile(tempTargetDir + "/newLocation", "src/test/resources/source/einsteiger.php.html");
+		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/einsteiger.php.html");
+		createTempFile(tempSrcDir + "/newLocation", "src/test/resources/source/einsteiger.php.html");
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
+		Map<String, Path> targetMap = syncer.buildTargetFileMap();
+		assertEquals(1, targetMap.size());
+		assertEquals(1, syncer.getHashedTargetMap().size());
+		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
+		assertEquals(1, report.getNoOfNewFiles());
+		assertEquals(0, report.getNoOfRelocatedFiles());
+		assertEquals(1, report.getAdditionalFiles().size());
+	}
+
+	/**
+	 * file is twice in the target , one source-loc matches one of the target-locs, <br/>
+	 * the other is relocated
+	 */
+	@Test
+	public void testFileMultipleTimesInTarget() throws IOException
+	{
+		Files.delete(targetFile);
+		Files.copy(sourceFile, targetFile);
+		createTempFile(tempTargetDir + "/newLocation", "src/test/resources/source/einsteiger.php.html");
+		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/einsteiger.php.html");
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(2, targetMap.size());
-        assertEquals(1, syncer.getHashedTargetMap().size());
-        Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
-        assertEquals(1, report.getNoOfMovedFiles());
-    }
+		assertEquals(1, syncer.getHashedTargetMap().size());
+		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
+		assertEquals(0, report.getNoOfNewFiles());
+		assertEquals(1, report.getNoOfRelocatedFiles());
+		assertEquals(0, report.getAdditionalFiles().size());
+	}
 
 	@Test
 	public void testAll() throws IOException
@@ -186,32 +253,29 @@ public class TestDirectorySyncer
 		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(8, targetMap.size());
-        assertEquals(7, syncer.getHashedTargetMap().size());
+		assertEquals(7, syncer.getHashedTargetMap().size());
 
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
-        //TODO failed, da wir vor kopie auf existenz im hash checken. Die Hashmap filtert aber duplicates, d.h.
-        //TODO wenn ein file im source mehrfach, im Target einfach vorkommt, wird es nicht kopiert werden.
-        //TODO target
 		assertEquals(18, syncer.buildTargetFileMap().size());
-                checkReport(report, 1, 9, 1);
-                assertEquals(26, report.getNoOfTargetFiles());
-                assertEquals(14, report.getNoOfSourceFiles());
-                assertEquals(4, report.getNoOfSourceDirectories());
-                assertTrue("report time was " + report.getSyncTime(), report.getSyncTime() > 0.0 && report.getSyncTime() < 1.0);
+		checkReport(report, 1, 9, 1);
+		assertEquals(26, report.getNoOfTargetFiles());
+		assertEquals(14, report.getNoOfSourceFiles());
+		assertEquals(4, report.getNoOfSourceDirectories());
+		assertTrue("report time was " + report.getSyncTime(), report.getSyncTime() > 0.0 && report.getSyncTime() < 1.0);
 	}
-        
-        
-    private void checkReport(Report report, int noChanged, int noNew, int noDir) {
-        assertEquals(noChanged, report.getNoOfChangedFiles());
-        assertEquals(noNew, report.getNoOfNewFiles());
-        assertEquals(noDir, report.getNoOfNewDirectories());
-        Set<Entry<Path, Path>> changedFiles = report.getChangedFiles().entrySet();
-        assertEquals(noChanged, changedFiles.size());
-        Set<Entry<Path, Path>> newFiles = report.getNewFiles().entrySet();
-        assertEquals(noNew, newFiles.size());
-        List<Path> newDirs = report.getNewDirectories();
-        assertEquals(noDir, newDirs.size());
-    }
+
+	private void checkReport(Report report, int noChanged, int noNew, int noDir)
+	{
+		assertEquals(noChanged, report.getNoOfChangedFiles());
+		assertEquals(noNew, report.getNoOfNewFiles());
+		assertEquals(noDir, report.getNoOfNewDirectories());
+		Set<Entry<Path, Path>> changedFiles = report.getChangedFiles().entrySet();
+		assertEquals(noChanged, changedFiles.size());
+		Set<Entry<Path, Path>> newFiles = report.getNewFiles().entrySet();
+		assertEquals(noNew, newFiles.size());
+		List<Path> newDirs = report.getNewDirectories();
+		assertEquals(noDir, newDirs.size());
+	}
 
 	private void copyDirectory(final Path rootSource, final String copytodir) throws IOException
 	{
