@@ -8,26 +8,26 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.Duration;
+
+import javax.xml.datatype.*;
 
 /**
  * Contains the results of a synchronization
  */
 public class Report {
     private int noOfChangedFiles = 0;
-    private Map<Path, Path> changedFiles = new HashMap<Path, Path>();
+    private final Map<Path, Path> changedFiles = new HashMap<Path, Path>();
     private int noOfNewFiles = 0;
-    private Map<Path, Path> newFiles = new HashMap<Path, Path>();
-    private List<Path> newDirectories = new ArrayList<Path>();
+    private final Map<Path, Path> newFiles = new HashMap<Path, Path>();
+    private final List<Path> newDirectories = new ArrayList<Path>();
     private int noOfNewDirectories = 0;
     private double syncTimeInSeconds = 0.0;
     private int noOfSourceFiles = 0;
     private int noOfSourceDirectories = 0;
     private int noOfTargetFiles = 0;
-    private int noOfMovedFiles = 0;
-    private List<Path> movedFiles = new ArrayList<Path>();;
+    private int noOfRelocatedFiles = 0;
+	private final List<Path> relocatedFiles = new ArrayList<Path>();
+	private final List<Path> additionalFiles = new ArrayList<Path>();
     
     public void addChangedFile(Path file, Path newTargetPath) {
         noOfChangedFiles++;
@@ -44,11 +44,18 @@ public class Report {
         newDirectories.add(newdir);
     }
     
-    public void addMovedFile(Path movedFile)
+	public void addRelocatedFile(Path relocatedFile)
     {
-        noOfMovedFiles++;
-        movedFiles.add(movedFile);
+        noOfRelocatedFiles++;
+		relocatedFiles.add(relocatedFile);
     }
+
+	/** additional file: exists already at a different location in the target. Still copied */
+	public void addAdditionalFile(Path additionalFile)
+	{
+		additionalFiles.add(additionalFile);
+
+	}
 
     public int getNoOfChangedFiles()
     {
@@ -81,9 +88,16 @@ public class Report {
     /**
      * List of files that have a new location in the target => nothing copied for them.
      */
-    public List<Path> getMovedFiles() {
-        return Collections.unmodifiableList(movedFiles);
+	public List<Path> getRelocatedFiles()
+	{
+        return Collections.unmodifiableList(relocatedFiles);
     }
+
+	/** List of files that are copied even though they already exist at a different location in the target */
+	public List<Path> getAdditionalFiles()
+	{
+		return additionalFiles;
+	}
 
     public int getNoOfChanges() {
         return getNoOfChangedFiles() + getNoOfNewDirectories() + getNoOfNewFiles();
@@ -131,8 +145,8 @@ public class Report {
     }
     
     /** files that had a new location in the target and were not copied */
-    public int getNoOfMovedFiles()
+    public int getNoOfRelocatedFiles()
     {
-        return noOfMovedFiles;
+        return noOfRelocatedFiles;
     }
 }
