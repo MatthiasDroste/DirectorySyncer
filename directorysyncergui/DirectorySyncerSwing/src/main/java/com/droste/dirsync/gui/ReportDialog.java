@@ -15,9 +15,6 @@ import java.awt.Font;
 public class ReportDialog extends javax.swing.JDialog {
 
     private Font defaultFont = ((MainFrame)getParent()).getDefaultFont();
-    private final boolean simulationMode = ((MainFrame) getParent()).isSimulationMode();;
-    private final String verb = (simulationMode) ? "would have been" : "were";
-    
     /**
      * Creates new form ReportDialog
      */
@@ -59,47 +56,32 @@ public class ReportDialog extends javax.swing.JDialog {
         jScrollPane3.setBackground(new java.awt.Color(255, 255, 255));
 
         changedFilesTable.setModel(new SyncTableModel(((MainFrame) getParent()).getReport().getChangedFiles()));
-        changedFilesTable.setCellSelectionEnabled(true);
         jScrollPane3.setViewportView(changedFilesTable);
 
         jScrollPane4.setBackground(new java.awt.Color(255, 255, 255));
 
         newFilesTable.setModel(new SyncTableModel(((MainFrame) getParent()).getReport().getNewFiles()));
-        newFilesTable.setCellSelectionEnabled(true);
         jScrollPane4.setViewportView(newFilesTable);
 
         jScrollPane2.setBackground(new java.awt.Color(255, 255, 255));
 
         newDirectoriesTable.setModel(new SyncTableModel(((MainFrame)getParent()).getReport().getNewDirectories()));
-        newDirectoriesTable.setCellSelectionEnabled(true);
         jScrollPane2.setViewportView(newDirectoriesTable);
-
-        jScrollPane5.setBackground(new java.awt.Color(255, 255, 255));
-        jScrollPane5.setBorder(null);
 
         newFilesText.setBorder(null);
         newFilesText.setContentType("text/html");
         newFilesText.setText(getNewFilesText());
         jScrollPane5.setViewportView(newFilesText);
 
-        jScrollPane6.setBackground(new java.awt.Color(255, 255, 255));
-        jScrollPane6.setBorder(null);
-
         jTextPane1.setBorder(null);
         jTextPane1.setContentType("text/html");
         jTextPane1.setText(getNewDirectoriesText());
         jScrollPane6.setViewportView(jTextPane1);
 
-        jScrollPane7.setBackground(new java.awt.Color(255, 255, 255));
-        jScrollPane7.setBorder(null);
-
         summaryText.setBorder(null);
         summaryText.setContentType("text/html");
         summaryText.setText(getSummaryText());
         jScrollPane7.setViewportView(summaryText);
-
-        jScrollPane1.setBackground(new java.awt.Color(255, 255, 255));
-        jScrollPane1.setBorder(null);
 
         changedFilesText.setBorder(null);
         changedFilesText.setContentType("text/html");
@@ -151,33 +133,30 @@ public class ReportDialog extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private String getSummaryText() {
-        final MainFrame mainframe = (MainFrame) getParent();
-        final Report report = mainframe.getReport();
-        int noOfChangedFiles = report.getNoOfChanges();
-        double syncTime = report.getSyncTime();
-        String simEntry = (simulationMode) ? "Simulation of " : "";
-        return "<font face=\"Tahoma 13 Plain, Arial\"><b>"+ simEntry + "Synchronization done in " + syncTime + " seconds. " + noOfChangedFiles + " files and folders " + verb + " copied from the source to the target directory.</b><br/>"
-                    + "Overall there were " + report.getNoOfSourceFiles() + " Files and " + report.getNoOfSourceDirectories() + " directories in the source, " + report.getNoOfTargetFiles() + " files in the target."
-                    + "<br>Check the information below for the exact list of changes.</font>";
+   private String getSummaryText() {
+       final Report report = ((MainFrame) getParent()).getReport();
+       int noOfChangedFiles = report.getNoOfChanges();
+       double syncTime = report.getSyncTime();
+        return "<b>Synchronization done in " + syncTime + " seconds. " + noOfChangedFiles + " files and folders were copied from the source to the target directory.</b>"
+                + "<br>Check the information below for the exact list of changes.";
     }
     
     private String getChangedFilesText() {
         int noOfChangedFiles = ((MainFrame) getParent()).getReport().getNoOfChangedFiles();
-        return "<font face=\"Tahoma 13 Plain, Arial\"><b>" + noOfChangedFiles + "</b> Files in the source had a different content. They " + verb + " copied to the target with an adapted name.<br>"
-                + "Detailed list of changed files:</font>";
+        return "<b>" + noOfChangedFiles + "</b> Files in the source had a different content. They were copied to the target with an adapted name.<br>"
+                + "Detailed list of changed files:";
     }
     
     private String getNewFilesText() {
         int noOfNewFiles = ((MainFrame) getParent()).getReport().getNoOfNewFiles();
-        return "<font face=\"Tahoma 13 Plain, Arial\"><b>" + noOfNewFiles + "</b> new Files were found in the source and " + verb + " copied to the corresponding subdirectories in the target.<br>"
-                + "Detailed list of new files:</font>";
+        return "<b>" + noOfNewFiles + "</b> new Files were found in the source and  copied to the corresponding subdirectories in the target.<br>"
+                + "Detailed list of new files:";
     }
 
     private String getNewDirectoriesText() {
         int noOfNewDirs = ((MainFrame) getParent()).getReport().getNoOfNewDirectories();
-        return "<font face=\"Tahoma 13 Plain, Arial\"><b>" + noOfNewDirs + "</b> new Directories " + verb + " created in the target.<br>"
-                + "Detailed list of new directories:</font>";
+        return "<b>" + noOfNewDirs + "</b> new Directories were created in the target.<br>"
+                + "Detailed list of new directories:";
     }
 
     /**

@@ -1,19 +1,16 @@
 package com.droste.file;
 
 import com.droste.file.report.Report;
-import java.io.BufferedInputStream;
 import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.zip.Adler32;
 
 import org.junit.*;
 
@@ -37,29 +34,14 @@ public class TestDirectorySyncer
 		cleanup(tempSrcDir);
 		cleanup(tempTargetDir);
 	}
-        
-        @Test
-        public void testAdler32Checksum() throws IOException
-        {
-            Adler32 adler = new Adler32();
-            long value;
-            for (int i = 0; i < 10000; i++) {
-                adler.update(Files.readAllBytes(targetFile));
-                value = adler.getValue();
-                System.out.println(value);
-                adler.reset();
-            }
-        }
-        
+
 	@Test
 	public void testBuildTargetFileMap() throws IOException
 	{
-		DirectorySyncer syncer = new DirectorySyncer("src/test/resources/source", "src/test/resources/target", false);
+		DirectorySyncer syncer = new DirectorySyncer("src/test/resources/source", "src/test/resources/target");
 		assertNotNull(syncer);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(8, targetMap.size());
-                //los gif exists twice in different locations:
-                assertEquals(7, syncer.getHashedTargetMap().size());
 	}
 
 	@Test
@@ -68,7 +50,7 @@ public class TestDirectorySyncer
 		Files.delete(targetFile);
 		Files.copy(sourceFile, targetFile);
 
-		DirectorySyncer syncer = new DirectorySyncer("src/test/resources/source/same", "src/test/resources/target/same", false);
+		DirectorySyncer syncer = new DirectorySyncer("src/test/resources/source/same", "src/test/resources/target/same");
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(1, targetMap.size());
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
@@ -82,7 +64,7 @@ public class TestDirectorySyncer
 	@Test
 	public void testRenameDuplicateFile()
 	{
-		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir);
 		assertEquals("einsteiger.php (1).html", syncer.renameDuplicateFile(sourceFile, 1));
 		assertEquals("einsteiger.php (2).html", syncer.renameDuplicateFile(sourceFile, 2));
 	}
@@ -91,7 +73,7 @@ public class TestDirectorySyncer
 	public void testRenameWithExistingDuplicates() throws IOException
 	{
 		Files.copy(targetFile, new File(tempTargetDir + "/" + "einsteiger.php (1).html").toPath());
-		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(2, targetMap.size());
                 Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
@@ -104,31 +86,13 @@ public class TestDirectorySyncer
                 assertTrue(theEntry.getKey().endsWith("einsteiger.php.html"));
                 assertTrue(theEntry.getValue().endsWith("einsteiger.php (2).html"));
 	}
-        
-        /** if there was a sync before, the source file would already have been copied, but renamed.
-         Find the renamed copy and don't copy again */ 
-        @Test
-	public void testNoRenameWithExistingDuplicates() throws IOException
-	{
-		Files.copy(sourceFile, new File(tempTargetDir + "/" + "einsteiger.php (1).html").toPath());
-		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
-		Map<String, Path> targetMap = syncer.buildTargetFileMap();
-		assertEquals(2, targetMap.size());
-                assertEquals(2, syncer.getHashedTargetMap().size());
-                Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
-
-		assertFalse(Files.exists(new File("temp2/einsteiger.php (2).html").toPath()));
-		assertEquals(2, syncer.buildTargetFileMap().size());
-                checkReport(report,0,0,0);
-	}
 
 	@Test
 	public void testDifferentFileSizeCopy() throws IOException
 	{
-		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(1, targetMap.size());
-                assertEquals(1, syncer.getHashedTargetMap().size());
 
 		assertFalse(Files.size(sourceFile) == Files.size(targetFile));
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
@@ -146,7 +110,7 @@ public class TestDirectorySyncer
 	{
 		Files.delete(targetFile);
 
-		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(0, targetMap.size());
 
@@ -155,25 +119,6 @@ public class TestDirectorySyncer
 		assertTrue(Files.size(sourceFile) == Files.size(targetFile));
                 checkReport(report, 0,1,0);
 	}
-        
-     /**
-     * search for file(hash) in the whole target. if exists then we asume there was a move in the
-     * target and don't copy.
-     */
-    @Test
-    public void testFileWasMovedDontCopy() throws IOException 
-    {
-        Files.delete(targetFile);
-        createTempFile(tempTargetDir + "/newLocation", "src/test/resources/source/einsteiger.php.html");
-        createTempFile(tempSrcDir + "/duplicate", "src/test/resources/source/einsteiger.php.html");
-        createTempFile(tempTargetDir + "/duplicate", "src/test/resources/source/einsteiger.php.html");
-        DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
-		Map<String, Path> targetMap = syncer.buildTargetFileMap();
-		assertEquals(2, targetMap.size());
-        assertEquals(1, syncer.getHashedTargetMap().size());
-        Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
-        assertEquals(1, report.getNoOfMovedFiles());
-    }
 
 	@Test
 	public void testAll() throws IOException
@@ -183,21 +128,13 @@ public class TestDirectorySyncer
 		copyDirectory(rootSource, tempSrcDir);
 		copyDirectory(rootTarget, tempTargetDir);
 
-		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(8, targetMap.size());
-        assertEquals(7, syncer.getHashedTargetMap().size());
 
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
-        //TODO failed, da wir vor kopie auf existenz im hash checken. Die Hashmap filtert aber duplicates, d.h.
-        //TODO wenn ein file im source mehrfach, im Target einfach vorkommt, wird es nicht kopiert werden.
-        //TODO target
-		assertEquals(18, syncer.buildTargetFileMap().size());
-                checkReport(report, 1, 9, 1);
-                assertEquals(26, report.getNoOfTargetFiles());
-                assertEquals(14, report.getNoOfSourceFiles());
-                assertEquals(4, report.getNoOfSourceDirectories());
-                assertTrue("report time was " + report.getSyncTime(), report.getSyncTime() > 0.0 && report.getSyncTime() < 1.0);
+		assertEquals(19, syncer.buildTargetFileMap().size());
+                checkReport(report, 2, 9, 1);
 	}
         
         
@@ -261,7 +198,7 @@ public class TestDirectorySyncer
 	{
 		Path path = new File(tempDir).toPath();
 		if (!Files.exists(path))
-			Files.createDirectory(path);
+			path = Files.createDirectory(path);
 		final Path source = new File(filePath).toPath();
 		Path target = new File(tempDir + "/" + source.getFileName()).toPath();
 		Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
