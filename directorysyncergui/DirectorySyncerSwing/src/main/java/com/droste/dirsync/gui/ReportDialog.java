@@ -7,8 +7,6 @@ package com.droste.dirsync.gui;
 import com.droste.file.report.Report;
 import java.awt.Color;
 import java.awt.Font;
-import java.util.zip.Adler32;
-import java.util.zip.Checksum;
 
 /**
  *
@@ -56,6 +54,10 @@ public class ReportDialog extends javax.swing.JDialog {
         relocatedFilesTable = new javax.swing.JTable();
         jScrollPane9 = new javax.swing.JScrollPane();
         relocatedFilesPane = new javax.swing.JTextPane();
+        jScrollPane11 = new javax.swing.JScrollPane();
+        additionalFilesPane = new javax.swing.JTextPane();
+        jScrollPane10 = new javax.swing.JScrollPane();
+        additionalFilesTable = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Synchronization Results");
@@ -65,47 +67,32 @@ public class ReportDialog extends javax.swing.JDialog {
         jScrollPane3.setBackground(new java.awt.Color(255, 255, 255));
 
         changedFilesTable.setModel(new SyncTableModel(((MainFrame) getParent()).getReport().getChangedFiles()));
-        changedFilesTable.setCellSelectionEnabled(true);
         jScrollPane3.setViewportView(changedFilesTable);
 
         jScrollPane4.setBackground(new java.awt.Color(255, 255, 255));
 
         newFilesTable.setModel(new SyncTableModel(((MainFrame) getParent()).getReport().getNewFiles()));
-        newFilesTable.setCellSelectionEnabled(true);
         jScrollPane4.setViewportView(newFilesTable);
 
         jScrollPane2.setBackground(new java.awt.Color(255, 255, 255));
 
         newDirectoriesTable.setModel(new SyncTableModel(((MainFrame)getParent()).getReport().getNewDirectories()));
-        newDirectoriesTable.setCellSelectionEnabled(true);
         jScrollPane2.setViewportView(newDirectoriesTable);
-
-        jScrollPane5.setBackground(new java.awt.Color(255, 255, 255));
-        jScrollPane5.setBorder(null);
 
         newFilesText.setBorder(null);
         newFilesText.setContentType("text/html");
         newFilesText.setText(getNewFilesText());
         jScrollPane5.setViewportView(newFilesText);
 
-        jScrollPane6.setBackground(new java.awt.Color(255, 255, 255));
-        jScrollPane6.setBorder(null);
-
         jTextPane1.setBorder(null);
         jTextPane1.setContentType("text/html");
         jTextPane1.setText(getNewDirectoriesText());
         jScrollPane6.setViewportView(jTextPane1);
 
-        jScrollPane7.setBackground(new java.awt.Color(255, 255, 255));
-        jScrollPane7.setBorder(null);
-
         summaryText.setBorder(null);
         summaryText.setContentType("text/html");
         summaryText.setText(getSummaryText());
         jScrollPane7.setViewportView(summaryText);
-
-        jScrollPane1.setBackground(new java.awt.Color(255, 255, 255));
-        jScrollPane1.setBorder(null);
 
         changedFilesText.setBorder(null);
         changedFilesText.setContentType("text/html");
@@ -125,6 +112,16 @@ public class ReportDialog extends javax.swing.JDialog {
         relocatedFilesPane.setText(getRelocatedFilesText());
         jScrollPane9.setViewportView(relocatedFilesPane);
 
+        additionalFilesPane.setBorder(null);
+        additionalFilesPane.setContentType("text/html");
+        additionalFilesPane.setText(getAdditionalFilesText());
+        jScrollPane11.setViewportView(additionalFilesPane);
+
+        jScrollPane10.setBackground(new java.awt.Color(255, 255, 255));
+
+        additionalFilesTable.setModel(new SyncTableModel(((MainFrame) getParent()).getReport().getAdditionalFiles()));
+        jScrollPane10.setViewportView(additionalFilesTable);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -132,18 +129,20 @@ public class ReportDialog extends javax.swing.JDialog {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1)
                     .addComponent(jScrollPane6)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jScrollPane4)
-                            .addComponent(jScrollPane7, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 1370, Short.MAX_VALUE)
-                            .addComponent(jScrollPane1)
-                            .addComponent(jScrollPane3)
-                            .addComponent(jScrollPane8)
                             .addComponent(jScrollPane5, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jScrollPane9))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                            .addComponent(jScrollPane10)
+                            .addComponent(jScrollPane11)
+                            .addComponent(jScrollPane8)
+                            .addComponent(jScrollPane9)
+                            .addComponent(jScrollPane7))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jScrollPane3))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -154,11 +153,15 @@ public class ReportDialog extends javax.swing.JDialog {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(4, 4, 4)
-                .addComponent(jScrollPane8, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 57, Short.MAX_VALUE)
+                .addComponent(jScrollPane8, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 61, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 162, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -204,14 +207,24 @@ public class ReportDialog extends javax.swing.JDialog {
     
      private String getRelocatedFilesText() {
         int noOfRelocatedFiles = ((MainFrame) getParent()).getReport().getNoOfRelocatedFiles();
-        return "<font face=\"Tahoma 13 Plain, Arial\"><b>" + noOfRelocatedFiles + "</b> have a new location in the target => nothing copied for them.<br>"
+        return "<font face=\"Tahoma 13 Plain, Arial\"><b>" + noOfRelocatedFiles + "</b>  files have a new location in the target => nothing copied for them.<br>"
                 + "Detailed list of relocated files:</font>";
+    }
+     
+    private String getAdditionalFilesText() {
+        int noOfAdditionalFiles = ((MainFrame) getParent()).getReport().getAdditionalFiles().size();
+        return "<font face=\"Tahoma 13 Plain, Arial\"><b>" + noOfAdditionalFiles + "</b>  files are copied even though they already exist at a different location in the target.<br>"
+                + "Detailed list of additional files:</font>";
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTextPane additionalFilesPane;
+    private javax.swing.JTable additionalFilesTable;
     private javax.swing.JTable changedFilesTable;
     private javax.swing.JTextPane changedFilesText;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane10;
+    private javax.swing.JScrollPane jScrollPane11;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
