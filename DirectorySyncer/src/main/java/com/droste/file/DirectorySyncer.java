@@ -144,11 +144,11 @@ public class DirectorySyncer
 					for (Path fileInTarget : filesInTarget) {
 						if (fileInTarget != null) {
 							if (locationExistsInSource(fileInTarget)) {
-								report.addAdditionalFile(file); // copy it
+								report.addAdditionalFile(file, filesInTarget); // copy it
 							} else if (!allSiblingsExistInNewTarget(file.getParent(), fileInTarget.getParent())) {
-								report.addAdditionalFile(file); // copy it
+								report.addAdditionalFile(file, filesInTarget); // copy it
 							} else {
-								report.addRelocatedFile(file);
+								report.addRelocatedFile(file, fileInTarget);
 								isRelocated = true;
 							}
 						}
@@ -194,12 +194,13 @@ public class DirectorySyncer
 	 */
 	protected void filterAdditionalFiles()
 	{
-		List<Path> additionalFiles = report.getAdditionalFiles();
-		for (Path relocated : report.getRelocatedFiles())
+		Map<Path, List<Path>> additionalFilesMap = report.getAdditionalFiles();
+		Set<Path> additionalFiles = additionalFilesMap.keySet();
+		for (Path relocated : report.getRelocatedFiles().keySet())
 		{
 			if (additionalFiles.contains(relocated))
 			{
-				additionalFiles.remove(relocated);
+				additionalFilesMap.remove(relocated);
 			}
 		}
 	}

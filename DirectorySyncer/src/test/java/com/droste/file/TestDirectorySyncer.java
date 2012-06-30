@@ -200,7 +200,9 @@ public class TestDirectorySyncer
 		assertEquals(3, report.getNoOfNewFiles());
 		assertEquals(0, report.getNoOfRelocatedFiles());
 		assertEquals(1, report.getAdditionalFiles().size());
-		assertEquals("einsteiger.php.html", report.getAdditionalFiles().get(0).getFileName().toString());
+		String additionalFileName = report.getAdditionalFiles().keySet().toArray(new Path[0])[0].getFileName()
+				.toString();
+		assertEquals("einsteiger.php.html", additionalFileName);
 	}
 
 	@Test

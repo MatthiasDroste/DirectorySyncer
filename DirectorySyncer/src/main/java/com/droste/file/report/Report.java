@@ -26,8 +26,8 @@ public class Report {
     private int noOfSourceDirectories = 0;
     private int noOfTargetFiles = 0;
     private int noOfRelocatedFiles = 0;
-	private final List<Path> relocatedFiles = new ArrayList<Path>();
-	private final List<Path> additionalFiles = new ArrayList<Path>();
+	private final Map<Path, Path> relocatedFiles = new HashMap<Path, Path>();
+	private final Map<Path, List<Path>> additionalFiles = new HashMap<Path, List<Path>>();
     
     public void addChangedFile(Path file, Path newTargetPath) {
         noOfChangedFiles++;
@@ -44,17 +44,16 @@ public class Report {
         newDirectories.add(newdir);
     }
     
-	public void addRelocatedFile(Path relocatedFile)
+	public void addRelocatedFile(Path relocatedFile, Path fileInTarget)
     {
         noOfRelocatedFiles++;
-		relocatedFiles.add(relocatedFile);
+		relocatedFiles.put(relocatedFile, fileInTarget);
     }
 
 	/** additional file: exists already at a different location in the target. Still copied */
-	public void addAdditionalFile(Path additionalFile)
+	public void addAdditionalFile(Path additionalFile, List<Path> filesInTarget)
 	{
-		additionalFiles.add(additionalFile);
-
+		additionalFiles.put(additionalFile, filesInTarget);
 	}
 
     public int getNoOfChangedFiles()
@@ -88,13 +87,13 @@ public class Report {
     /**
      * List of files that have a new location in the target => nothing copied for them.
      */
-	public List<Path> getRelocatedFiles()
+	public Map<Path, Path> getRelocatedFiles()
 	{
-        return Collections.unmodifiableList(relocatedFiles);
+		return Collections.unmodifiableMap(relocatedFiles);
     }
 
 	/** List of files that are copied even though they already exist at a different location in the target */
-	public List<Path> getAdditionalFiles()
+	public Map<Path, List<Path>> getAdditionalFiles()
 	{
 		return additionalFiles;
 	}
