@@ -1,13 +1,13 @@
 package com.droste.file;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.Adler32;
+import java.util.zip.Checksum;
 
 import com.droste.file.report.Report;
 
@@ -35,7 +35,7 @@ public class DirectorySyncer
 	private final Report report;
 	private final boolean isSimulationMode;
 	private final Map<Long, List<Path>> hashedTargetMap = new HashMap<Long, List<Path>>();
-	private final Adler32 adler = new Adler32();
+	private final Checksum adler = new Adler32();
 
 	public DirectorySyncer(String source, String target, boolean isSimulationMode)
 	{
@@ -221,15 +221,27 @@ public class DirectorySyncer
 
 	private Long hash(Path file)
 	{
+		InputStream inputStream = null;
 		try {
-			adler.update(Files.readAllBytes(file));
+			inputStream = Files.newInputStream(file);
+			byte[] currentChunk = new byte[8192];
+			while (inputStream.read(currentChunk) > -1) {
+				adler.update(currentChunk, 0, currentChunk.length);
+			}
 			long value = adler.getValue();
 			adler.reset();
 			return value;
 		} catch (IOException ex) {
 			Logger.getLogger(DirectorySyncer.class.getName()).log(Level.SEVERE, null, ex);
 			return null;
+		} finally {
+			try {
+				inputStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
+
 	}
 
 	public Map<Long, List<Path>> getHashedTargetMap()
