@@ -1,8 +1,6 @@
 package com.droste.file;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
@@ -42,7 +40,7 @@ public class DirectorySyncer
 	static
 	{
 		NOHASH_FILES.addAll(Arrays.asList(new String[] { "png", "jpg", "jpeg", "mpg", "asf", "avi", "m4v", "mov",
-				"mp4", "mp4v", "mov", "wm", "wmv", "aif", "mpe", "mpeg", "mpg", "mpv2", "gif" }));
+				"pdf", "mp3", "mp4", "mp4v", "mov", "wm", "wmv", "aif", "mpe", "mpeg", "mpg", "mpv2", "gif" }));
 	}
 
 	public DirectorySyncer(String source, String target, boolean isSimulationMode)
