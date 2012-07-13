@@ -1,6 +1,8 @@
 package com.droste.file;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
@@ -36,6 +38,12 @@ public class DirectorySyncer
 	private final boolean isSimulationMode;
 	private final Map<Long, List<Path>> hashedTargetMap = new HashMap<Long, List<Path>>();
 	private final Checksum adler = new Adler32();
+	private static final Set<String> NOHASH_FILES = new HashSet<String>();
+	static
+	{
+		NOHASH_FILES.addAll(Arrays.asList(new String[] { "png", "jpg", "jpeg", "mpg", "asf", "avi", "m4v", "mov",
+				"mp4", "mp4v", "mov", "wm", "wmv", "aif", "mpe", "mpeg", "mpg", "mpv2", "gif" }));
+	}
 
 	public DirectorySyncer(String source, String target, boolean isSimulationMode)
 	{
@@ -58,13 +66,9 @@ public class DirectorySyncer
 				report.countTargetFiles();
 				targetMap.put(target.relativize(file).toString(), file);
 				Long hash = hash(file);
-				if (hash != null) {
-					List<Path> pathsForHash = hashedTargetMap.get(hash);
-					if (pathsForHash == null) {
-						pathsForHash = new ArrayList<Path>();
-					}
-					pathsForHash.add(file);
-					hashedTargetMap.put(hash, pathsForHash);
+				if (hash != null)
+				{
+					addToHashedTargets(file, hash);
 				}
 				return super.visitFile(file, attrs);
 			}
@@ -81,11 +85,14 @@ public class DirectorySyncer
 			{
 				report.countSourceFiles();
 				Path targetPath = targetMap.get(source.relativize(file).toString());
-				if (targetPath != null) {
-					if (Files.size(file) != Files.size(targetPath)) {
+				if (targetPath != null)
+				{
+					if (Files.size(file) != Files.size(targetPath))
+					{
 						handleChangedFile(file, targetPath);
 					}
-				} else {
+				} else
+				{
 					if (!checkIfRelocated(file))
 						handleNewFile(file);
 				}
@@ -97,7 +104,8 @@ public class DirectorySyncer
 			{
 				report.countDirectories();
 				Path newdir = target.resolve(source.relativize(dir));
-				if (!Files.exists(newdir)) {
+				if (!Files.exists(newdir))
+				{
 					if (!isSimulationMode)
 						Files.createDirectory(newdir);
 					report.addNewDirectory(newdir);
@@ -117,7 +125,8 @@ public class DirectorySyncer
 			{
 				Path newTargetPath = targetPath;
 				int counter = 1;
-				while (Files.exists(newTargetPath)) {
+				while (Files.exists(newTargetPath))
+				{
 					if (Files.size(newTargetPath) == Files.size(file))
 						return;
 					String newName = renameDuplicateFile(targetPath, counter);
@@ -140,14 +149,20 @@ public class DirectorySyncer
 				boolean isRelocated = false;
 				Long hash = hash(file);
 				List<Path> filesInTarget = hashedTargetMap.get(hash);
-				if (filesInTarget != null) {
-					for (Path fileInTarget : filesInTarget) {
-						if (fileInTarget != null) {
-							if (locationExistsInSource(fileInTarget)) {
+				if (filesInTarget != null)
+				{
+					for (Path fileInTarget : filesInTarget)
+					{
+						if (fileInTarget != null && getFileEnding(fileInTarget).equalsIgnoreCase(getFileEnding(file)))
+						{
+							if (locationExistsInSource(fileInTarget))
+							{
 								report.addAdditionalFile(file, filesInTarget); // copy it
-							} else if (!allSiblingsExistInNewTarget(file.getParent(), fileInTarget.getParent())) {
+							} else if (!allSiblingsExistInNewTarget(file.getParent(), fileInTarget.getParent()))
+							{
 								report.addAdditionalFile(file, filesInTarget); // copy it
-							} else {
+							} else
+							{
 								report.addRelocatedFile(file, fileInTarget);
 								isRelocated = true;
 							}
@@ -156,11 +171,6 @@ public class DirectorySyncer
 					filterAdditionalFiles();
 				}
 				return isRelocated;
-			}
-
-			private boolean locationExistsInSource(Path fileInTarget)
-			{
-				return Files.exists(source.resolve(target.relativize(fileInTarget)));
 			}
 
 			private boolean allSiblingsExistInNewTarget(final Path folderInSource, final Path folderInTarget)
@@ -174,7 +184,8 @@ public class DirectorySyncer
 					{
 						Path relativized = folderInSource.relativize(file);
 						Path resolved = folderInTarget.resolve(relativized);
-						if (!Files.exists(resolved)) {
+						if (!Files.exists(resolved))
+						{
 							allSibilingsExistInNewTarget[0] = false;
 						}
 						return super.visitFile(file, attrs);
@@ -209,7 +220,8 @@ public class DirectorySyncer
 	{
 		String[] split = file.getFileName().toString().split("\\.");
 		StringBuilder newName = new StringBuilder();
-		for (int i = 0; i < split.length; i++) {
+		for (int i = 0; i < split.length; i++)
+		{
 			newName.append(split[i]);
 			if (i == split.length - 2)
 				newName.append(" (").append(counter).append(")");
@@ -219,29 +231,66 @@ public class DirectorySyncer
 		return newName.toString();
 	}
 
-	private Long hash(Path file)
+	private boolean locationExistsInSource(Path fileInTarget)
 	{
+		return Files.exists(source.resolve(target.relativize(fileInTarget)));
+	}
+
+	/**
+	 * "non-changing" multimedia files are fake-hashed the length to increase speed. <br/>
+	 * All other files get a real hash.
+	 */
+	private Long hash(Path file) throws IOException
+	{
+		if (NOHASH_FILES.contains(getFileEnding(file)))
+		{
+			return Files.size(file);
+		}
+
 		InputStream inputStream = null;
-		try {
+		try
+		{
 			inputStream = Files.newInputStream(file);
 			byte[] currentChunk = new byte[8192];
-			while (inputStream.read(currentChunk) > -1) {
+			while (inputStream.read(currentChunk) > -1)
+			{
 				adler.update(currentChunk, 0, currentChunk.length);
 			}
 			long value = adler.getValue();
 			adler.reset();
 			return value;
-		} catch (IOException ex) {
+		} catch (IOException ex)
+		{
 			Logger.getLogger(DirectorySyncer.class.getName()).log(Level.SEVERE, null, ex);
 			return null;
-		} finally {
-			try {
+		} finally
+		{
+			try
+			{
 				inputStream.close();
-			} catch (IOException e) {
+			} catch (IOException e)
+			{
 				e.printStackTrace();
 			}
 		}
+	}
 
+	private String getFileEnding(Path file)
+	{
+		String[] nameElements = file.getFileName().toString().split("\\.");
+		String ending = nameElements[nameElements.length - 1];
+		return ending;
+	}
+
+	private void addToHashedTargets(Path file, Long hash)
+	{
+		List<Path> pathsForHash = hashedTargetMap.get(hash);
+		if (pathsForHash == null)
+		{
+			pathsForHash = new ArrayList<Path>();
+		}
+		pathsForHash.add(file);
+		hashedTargetMap.put(hash, pathsForHash);
 	}
 
 	public Map<Long, List<Path>> getHashedTargetMap()

@@ -54,9 +54,9 @@ public class TestDirectorySyncer
 		DirectorySyncer syncer = new DirectorySyncer("src/test/resources/source", "src/test/resources/target", false);
 		assertNotNull(syncer);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
-		assertEquals(8, targetMap.size());
+		assertEquals(9, targetMap.size());
 		// los gif exists twice in different locations:
-		assertEquals(7, syncer.getHashedTargetMap().size());
+		assertEquals(8, syncer.getHashedTargetMap().size());
 	}
 
 	@Test
@@ -244,6 +244,28 @@ public class TestDirectorySyncer
 		assertEquals(0, report.getAdditionalFiles().size());
 	}
 
+	/**
+	 * Multimedia files use the size as hash. i.e. there will be collisions.<br/>
+	 * The file still has to be copied if name is different.
+	 */
+	@Test
+	public void testMultiMediaFile() throws IOException
+	{
+		long emptyAvi = Files.size(Paths.get("src/test/resources/source/multimedia/test1.avi"));
+		long emptyAvi2 = Files.size(Paths.get("src/test/resources/target/multimedia/test2.avi"));
+		assertEquals(emptyAvi, emptyAvi2);
+
+		final Path rootSource = new File("src/test/resources/source/multimedia").toPath();
+		final Path rootTarget = new File("src/test/resources/target/multimedia").toPath();
+		copyDirectory(rootSource, tempSrcDir);
+		copyDirectory(rootTarget, tempTargetDir);
+
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
+		Map<String, Path> targetMap = syncer.buildTargetFileMap();
+		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
+		assertEquals(1, report.getNoOfNewFiles());
+	}
+
 	@Test
 	public void testAll() throws IOException
 	{
@@ -254,15 +276,15 @@ public class TestDirectorySyncer
 
 		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
-		assertEquals(8, targetMap.size());
-		assertEquals(7, syncer.getHashedTargetMap().size());
+		assertEquals(9, targetMap.size());
+		assertEquals(8, syncer.getHashedTargetMap().size());
 
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
-		assertEquals(18, syncer.buildTargetFileMap().size());
-		checkReport(report, 1, 9, 1);
-		assertEquals(26, report.getNoOfTargetFiles());
-		assertEquals(14, report.getNoOfSourceFiles());
-		assertEquals(4, report.getNoOfSourceDirectories());
+		assertEquals(20, syncer.buildTargetFileMap().size());
+		checkReport(report, 1, 10, 1);
+		assertEquals(29, report.getNoOfTargetFiles());
+		assertEquals(15, report.getNoOfSourceFiles());
+		assertEquals(5, report.getNoOfSourceDirectories());
 		assertTrue("report time was " + report.getSyncTime(), report.getSyncTime() > 0.0 && report.getSyncTime() < 1.0);
 	}
 

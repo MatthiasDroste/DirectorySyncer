@@ -16,12 +16,9 @@ import com.droste.file.DirectorySyncer;
 import com.droste.file.report.Report;
 import java.awt.*;
 
-/**
- *
- * @author matthias
- */
 public class MainFrame extends javax.swing.JFrame {
 
+	private static final long serialVersionUID = 6089495732577775128L;
 	private Report report;
         private Font defaultFont;
         private boolean isSimulationMode = false;

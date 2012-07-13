@@ -4,9 +4,10 @@
  */
 package com.droste.dirsync.gui;
 
-import com.droste.file.report.Report;
 import java.awt.Color;
 import java.awt.Font;
+
+import com.droste.file.report.Report;
 
 /**
  *
@@ -14,7 +15,8 @@ import java.awt.Font;
  */
 public class ReportDialog extends javax.swing.JDialog {
 
-    private Font defaultFont = ((MainFrame)getParent()).getDefaultFont();
+	private static final long serialVersionUID = 356885272579092164L;
+	private final Font defaultFont = ((MainFrame) getParent()).getDefaultFont();
     private final boolean simulationMode = ((MainFrame) getParent()).isSimulationMode();;
     private final String verb = (simulationMode) ? "would have been" : "were";
     

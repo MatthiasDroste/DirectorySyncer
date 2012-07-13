@@ -12,7 +12,8 @@ import javax.swing.table.AbstractTableModel;
 
 class SyncTableModel extends AbstractTableModel {
  
-    private final List<String> tableHeader;
+	private static final long serialVersionUID = -1090038140627776450L;
+	private final List<String> tableHeader;
     private final List<List<String>> tableContent;
 
     public SyncTableModel(Map<Path, Path> files)
