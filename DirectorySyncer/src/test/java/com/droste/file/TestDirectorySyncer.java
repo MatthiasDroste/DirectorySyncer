@@ -173,6 +173,8 @@ public class TestDirectorySyncer
 		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/einsteiger.php.html");
 		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/links.html");
 		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/martin.html");
+		// special twist: this has to be ignored:
+		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/Thumbs.db");
 
 		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();

@@ -42,7 +42,7 @@ public class DirectorySyncer
 	{
 		NOHASH_FILES.addAll(Arrays.asList(new String[] { "png", "jpg", "jpeg", "mpg", "asf", "avi", "m4v", "mov",
 				"pdf", "mp3", "mp4", "mp4v", "mov", "wm", "wmv", "aif", "mpe", "mpeg", "mpg", "mpv2", "gif" }));
-		IGNORE_FILES.addAll(Arrays.asList(new String[] { "Thumbs.db", "desktop.ini" }));
+		IGNORE_FILES.addAll(Arrays.asList(new String[] { "thumbs.db", "desktop.ini" }));
 	}
 
 
@@ -64,7 +64,7 @@ public class DirectorySyncer
 			@Override
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
 			{
-				if (IGNORE_FILES.contains(file.getFileName()))
+				if (IGNORE_FILES.contains(file.getFileName().toString().toLowerCase()))
 					return super.visitFile(file, attrs);
 
 				report.countTargetFiles();
@@ -87,7 +87,7 @@ public class DirectorySyncer
 			@Override
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
 			{
-				if (IGNORE_FILES.contains(file.getFileName()))
+				if (IGNORE_FILES.contains(file.getFileName().toString().toLowerCase()))
 					return super.visitFile(file, attrs);
 
 				report.countSourceFiles();
@@ -190,7 +190,7 @@ public class DirectorySyncer
 					@Override
 					public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
 					{
-						if (IGNORE_FILES.contains(file.getFileName()))
+						if (IGNORE_FILES.contains(file.getFileName().toString().toLowerCase()))
 							return super.visitFile(file, attrs);
 
 						Path relativized = folderInSource.relativize(file);
