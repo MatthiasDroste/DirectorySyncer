@@ -37,11 +37,14 @@ public class DirectorySyncer
 	private final Map<Long, List<Path>> hashedTargetMap = new HashMap<Long, List<Path>>();
 	private final Checksum adler = new Adler32();
 	private static final Set<String> NOHASH_FILES = new HashSet<String>();
+	private static final Set<String> IGNORE_FILES = new HashSet<String>();
 	static
 	{
 		NOHASH_FILES.addAll(Arrays.asList(new String[] { "png", "jpg", "jpeg", "mpg", "asf", "avi", "m4v", "mov",
 				"pdf", "mp3", "mp4", "mp4v", "mov", "wm", "wmv", "aif", "mpe", "mpeg", "mpg", "mpv2", "gif" }));
+		IGNORE_FILES.addAll(Arrays.asList(new String[] { "Thumbs.db", "desktop.ini" }));
 	}
+
 
 	public DirectorySyncer(String source, String target, boolean isSimulationMode)
 	{
@@ -61,6 +64,9 @@ public class DirectorySyncer
 			@Override
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
 			{
+				if (IGNORE_FILES.contains(file.getFileName()))
+					return super.visitFile(file, attrs);
+
 				report.countTargetFiles();
 				targetMap.put(target.relativize(file).toString(), file);
 				Long hash = hash(file);
@@ -81,6 +87,9 @@ public class DirectorySyncer
 			@Override
 			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
 			{
+				if (IGNORE_FILES.contains(file.getFileName()))
+					return super.visitFile(file, attrs);
+
 				report.countSourceFiles();
 				Path targetPath = targetMap.get(source.relativize(file).toString());
 				if (targetPath != null)
@@ -99,7 +108,8 @@ public class DirectorySyncer
 
 			@Override
 			public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException
-			{
+			{ // TODO this might create empty dirs if the files in the source are recognized as
+				// relocated in the target.
 				report.countDirectories();
 				Path newdir = target.resolve(source.relativize(dir));
 				if (!Files.exists(newdir))
@@ -180,6 +190,9 @@ public class DirectorySyncer
 					@Override
 					public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
 					{
+						if (IGNORE_FILES.contains(file.getFileName()))
+							return super.visitFile(file, attrs);
+
 						Path relativized = folderInSource.relativize(file);
 						Path resolved = folderInTarget.resolve(relativized);
 						if (!Files.exists(resolved))
