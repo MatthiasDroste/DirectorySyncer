@@ -16,17 +16,20 @@ import com.droste.file.DirectorySyncer;
 import com.droste.file.report.Report;
 import java.awt.*;
 
+/**
+ *
+ * @author matthias
+ */
 public class MainFrame extends javax.swing.JFrame {
 
-	private static final long serialVersionUID = 6089495732577775128L;
-	private Report report;
-        private Font defaultFont;
-        private boolean isSimulationMode = false;
-        
-        public Font getDefaultFont()
-        {
-            return defaultFont;
-        }
+    private Report report;
+    private Font defaultFont;
+    private boolean isSimulationMode = false;
+
+    public Font getDefaultFont() {
+        return defaultFont;
+    }
+
     /**
      * Creates new form MainFrame
      */
@@ -72,8 +75,9 @@ public class MainFrame extends javax.swing.JFrame {
         targetDirectoryField = new javax.swing.JTextField();
         sourceButton = new javax.swing.JButton();
         targetButton = new javax.swing.JButton();
-        simulationModeCheck = new javax.swing.JCheckBox();
         synchronizeButton = new javax.swing.JButton();
+        simulationModeCheckBox = new javax.swing.JCheckBox();
+        cancelButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBackground(new java.awt.Color(255, 255, 255));
@@ -105,15 +109,6 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
 
-        simulationModeCheck.setBackground(new java.awt.Color(255, 255, 255));
-        simulationModeCheck.setText("Simulation Mode");
-        simulationModeCheck.setToolTipText("Use this to get a report on what changes would be done without copying anything");
-        simulationModeCheck.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                simulationModeCheckActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -121,19 +116,16 @@ public class MainFrame extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel2))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(sourceDirectoyField, javax.swing.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
-                            .addComponent(targetDirectoryField))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(sourceButton)
-                            .addComponent(targetButton)))
-                    .addComponent(simulationModeCheck))
+                    .addComponent(jLabel1)
+                    .addComponent(jLabel2))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(sourceDirectoyField, javax.swing.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
+                    .addComponent(targetDirectoryField))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(sourceButton)
+                    .addComponent(targetButton))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -149,9 +141,7 @@ public class MainFrame extends javax.swing.JFrame {
                     .addComponent(jLabel2)
                     .addComponent(targetDirectoryField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(targetButton))
-                .addGap(18, 18, 18)
-                .addComponent(simulationModeCheck)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(25, Short.MAX_VALUE))
         );
 
         synchronizeButton.setText("Start Synchronization");
@@ -161,25 +151,51 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
 
+        simulationModeCheckBox.setBackground(new java.awt.Color(255, 255, 255));
+        simulationModeCheckBox.setText("Simulation mode");
+        simulationModeCheckBox.setToolTipText("Switch on to simulate a synchronization");
+        simulationModeCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                simulationModeCheckBoxActionPerformed(evt);
+            }
+        });
+
+        cancelButton.setBackground(new java.awt.Color(255, 255, 255));
+        cancelButton.setText("Cancel");
+        cancelButton.setToolTipText("");
+        cancelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cancelButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(synchronizeButton))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(synchronizeButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(cancelButton, javax.swing.GroupLayout.PREFERRED_SIZE, 135, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(simulationModeCheckBox)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(simulationModeCheckBox)
                 .addGap(18, 18, 18)
-                .addComponent(synchronizeButton)
-                .addContainerGap())
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(synchronizeButton)
+                    .addComponent(cancelButton))
+                .addContainerGap(20, Short.MAX_VALUE))
         );
 
         pack();
@@ -190,7 +206,7 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_sourceDirectoyFieldActionPerformed
 
     private void sourceButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sourceButtonActionPerformed
-        chooseDirectory(sourceDirectoyField );
+        chooseDirectory(sourceDirectoyField);
     }//GEN-LAST:event_sourceButtonActionPerformed
 
     private void targetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_targetButtonActionPerformed
@@ -198,32 +214,82 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_targetButtonActionPerformed
 
     private void synchronizeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_synchronizeButtonActionPerformed
-        final String sourceDir = sourceDirectoyField.getText();
-        final String targetDir = targetDirectoryField.getText();
-        if (sourceDir != null && targetDir != null) {
-            DirectorySyncer directorySyncer = new DirectorySyncer(sourceDir, targetDir, isSimulationMode);
-            try {
-                Map<String, Path> targetMap = directorySyncer.buildTargetFileMap();
-				this.report = directorySyncer.findAndHandleSourcesInTargetMap(targetMap);
-				new ReportDialog(this, false).setVisible(true);
-                //jDialog.setTitle("Syncing worked");
-            } catch (IOException e1) {
-                JDialog jDialog = new JDialog(this);
-                jDialog.setTitle("Syncing failed");
-                new ReportDialog(this, false).setVisible(true);
-            }
-            catch (Exception ex)
-            {
-                System.out.println(ex.getMessage());
-                ex.printStackTrace();
-            }
+        synchronizeButton.setEnabled(false);
+        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-        }
+        try {
+                    final String sourceDir = sourceDirectoyField.getText();
+                    final String targetDir = targetDirectoryField.getText();
+                    if (sourceDir != null && targetDir != null) {
+                        DirectorySyncer directorySyncer = new DirectorySyncer(sourceDir, targetDir, isSimulationMode);
+                        Map<String, Path> targetMap = directorySyncer.buildTargetFileMap();
+                        report = directorySyncer.findAndHandleSourcesInTargetMap(targetMap);
+                        this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                        new ReportDialog(MainFrame.this, false).setVisible(true);
+                        //jDialog.setTitle("Syncing worked");
+                    }
+                //} catch (InterruptedException e) {
+                //    interrupt();
+                //    System.out.println("Unterbrechung in sleep()");
+                } catch (IOException e1) {
+                    JDialog jDialog = new JDialog(MainFrame.this);
+                    jDialog.setTitle("Syncing failed");
+                    this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                    new ReportDialog(MainFrame.this, false).setVisible(true);
+                } catch (Exception ex) {
+                    System.out.println(ex.getMessage());
+                    ex.printStackTrace();
+                    this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                }
     }//GEN-LAST:event_synchronizeButtonActionPerformed
 
     private void simulationModeCheckActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_simulationModeCheckActionPerformed
         this.isSimulationMode = true;
     }//GEN-LAST:event_simulationModeCheckActionPerformed
+
+    private void simulationModeCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_simulationModeCheckBoxActionPerformed
+        if (this.isSimulationMode == false) {
+            this.isSimulationMode = true;
+        } else {
+            this.isSimulationMode = false;
+        }
+    }//GEN-LAST:event_simulationModeCheckBoxActionPerformed
+
+    private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_cancelButtonActionPerformed
+    
+    private Thread SyncRunner = new Thread() {
+
+        @Override
+        public void run() {
+            while (!isInterrupted()) {
+                System.out.println("Und er läuft und er läuft und er läuft");
+
+                try {
+                    final String sourceDir = sourceDirectoyField.getText();
+                    final String targetDir = targetDirectoryField.getText();
+                    if (sourceDir != null && targetDir != null) {
+                        DirectorySyncer directorySyncer = new DirectorySyncer(sourceDir, targetDir, isSimulationMode);
+                        Map<String, Path> targetMap = directorySyncer.buildTargetFileMap();
+                        report = directorySyncer.findAndHandleSourcesInTargetMap(targetMap);
+                        new ReportDialog(MainFrame.this, false).setVisible(true);
+                        //jDialog.setTitle("Syncing worked");
+                    }
+                //} catch (InterruptedException e) {
+                //    interrupt();
+                //    System.out.println("Unterbrechung in sleep()");
+                } catch (IOException e1) {
+                    JDialog jDialog = new JDialog(MainFrame.this);
+                    jDialog.setTitle("Syncing failed");
+                    new ReportDialog(MainFrame.this, false).setVisible(true);
+                } catch (Exception ex) {
+                    System.out.println(ex.getMessage());
+                    ex.printStackTrace();
+                }
+            }
+        }
+    };                             
 
     
 
@@ -247,16 +313,32 @@ public class MainFrame extends javax.swing.JFrame {
                 if (lookAndFeel.equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
-                }
+                
+
+}
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(MainFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(MainFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(MainFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(MainFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(MainFrame.class  
+
+.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } 
+
+catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(MainFrame.class  
+
+.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } 
+
+catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(MainFrame.class  
+
+.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } 
+
+catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(MainFrame.class  
+
+.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
@@ -271,11 +353,12 @@ public class MainFrame extends javax.swing.JFrame {
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton cancelButton;
     private javax.swing.JFileChooser jFileChooser1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JCheckBox simulationModeCheck;
+    private javax.swing.JCheckBox simulationModeCheckBox;
     private javax.swing.JButton sourceButton;
     private javax.swing.JTextField sourceDirectoyField;
     private javax.swing.JButton synchronizeButton;

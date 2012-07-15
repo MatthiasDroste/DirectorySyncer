@@ -12,15 +12,15 @@ import javax.swing.table.AbstractTableModel;
 
 class SyncTableModel extends AbstractTableModel {
  
-	private static final long serialVersionUID = -1090038140627776450L;
-	private final List<String> tableHeader;
+    private final List<String> tableHeader;
     private final List<List<String>> tableContent;
 
-    public SyncTableModel(Map<Path, Path> files)
+    public SyncTableModel(Map<Path, String> files)
     {
         this.tableContent = getChangedFiles(files);
         this.tableHeader = getTableHeader();
     }
+    
     
     public SyncTableModel(List<Path> directories)
     {
@@ -65,12 +65,27 @@ class SyncTableModel extends AbstractTableModel {
         return tableHeader;
     }
 
-    private List<List<String>> getChangedFiles(Map<Path, Path> files) {
+    private List<List<String>> getChangedFiles(Map<Path, String> files) {
         List<List<String>> tableContent = new ArrayList<List<String>>();
-        for (Map.Entry<Path, Path> entry : files.entrySet()) {
+        for (Map.Entry<Path, String> entry : files.entrySet()) {
             List<String> contentRow = new ArrayList<String>();
             contentRow.add(entry.getKey().toString());
-            contentRow.add(entry.getValue().toString());
+            contentRow.add(entry.getValue());
+            tableContent.add(contentRow);
+        }
+        return tableContent;
+    }
+    
+    private List<List<String>> getConcatenatedFileNames(Map<Path, List<Path>> files)
+    {
+        List<List<String>> tableContent = new ArrayList<List<String>>();
+        for (Map.Entry<Path, List<Path>> entry : files.entrySet()) {
+            List<String> contentRow = new ArrayList<String>();
+            contentRow.add(entry.getKey().toString());
+            StringBuilder targetPaths = new StringBuilder();
+            final List<Path> values = entry.getValue();
+            for (Path value : values) targetPaths.append(value.toString()).append(" ");
+            contentRow.add(targetPaths.toString());
             tableContent.add(contentRow);
         }
         return tableContent;
