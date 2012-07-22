@@ -48,6 +48,23 @@ public class TestDirectorySyncer
 		assertTrue(System.currentTimeMillis() - time < 1000);
 	}
 
+	/** directory structure has files in the source but is empty in the target: delete it. */
+	@Test
+	public void testCleanupDirs() throws IOException
+	{
+		createTempFile(tempSrcDir + "/test/test2/test3", "src/test/resources/source/links.html");
+		Path targetDir = Paths.get(tempTargetDir + "/test/test2/test3");
+		Files.createDirectories(targetDir);
+		Report report = new Report();
+		report.addNewDirectory(targetDir);
+		report.addNewDirectory(targetDir.getParent());
+		report.addNewDirectory(targetDir.getParent().getParent());
+
+		Report cleanedReport = new DirectorySyncer(tempSrcDir, tempTargetDir, false).cleanupDirs(report);
+		assertEquals(0, cleanedReport.getNoOfNewDirectories());
+		assertEquals(0, report.getNewDirectories().size());
+	}
+
 	@Test
 	public void testBuildTargetFileMap() throws IOException
 	{
@@ -57,24 +74,6 @@ public class TestDirectorySyncer
 		assertEquals(9, targetMap.size());
 		// los gif exists twice in different locations:
 		assertEquals(8, syncer.getHashedTargetMap().size());
-	}
-
-	@Test
-	public void testFindSourcesSameFileSameSizeDontCopy() throws IOException
-	{
-		Files.delete(targetFile);
-		Files.copy(sourceFile, targetFile);
-
-		DirectorySyncer syncer = new DirectorySyncer("src/test/resources/source/same",
-				"src/test/resources/target/same", false);
-		Map<String, Path> targetMap = syncer.buildTargetFileMap();
-		assertEquals(1, targetMap.size());
-		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
-		assertTrue(Files.size(sourceFile) == Files.size(targetFile));
-		assertEquals(1, syncer.buildTargetFileMap().size());
-		assertEquals(0, report.getNoOfChangedFiles());
-		assertEquals(0, report.getNoOfNewFiles());
-		assertEquals(0, report.getNoOfNewDirectories());
 	}
 
 	@Test
@@ -175,14 +174,41 @@ public class TestDirectorySyncer
 		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/martin.html");
 		// special twist: this has to be ignored:
 		createTempFile(tempSrcDir + "/oldLocation", "src/test/resources/source/Thumbs.db");
+		// special twist 2: directories have to be ignored, too:
+		Files.createDirectory(Paths.get(tempTargetDir + "/newLocation/ignoredDir"));
+		Files.createDirectory(Paths.get(tempSrcDir + "/oldLocation/ignoredDir2"));
 
 		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, false);
 		Map<String, Path> targetMap = syncer.buildTargetFileMap();
 		assertEquals(3, targetMap.size());
 		assertEquals(3, syncer.getHashedTargetMap().size());
 		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
+		report = syncer.cleanupDirs(report);
 		assertEquals(0, report.getNoOfNewFiles());
 		assertEquals(3, report.getNoOfRelocatedFiles());
+		// the directory was already empty in the source => is copied
+		assertEquals(2, report.getNoOfNewDirectories());
+	}
+
+	/** regression test: reorg of mp3-files caused double copy */
+	@Test
+	public void testDifferentFolderCapitalizationDontCopy() throws IOException
+	{
+		Files.delete(targetFile);
+		Files.delete(sourceFile);
+		createTempFile(tempTargetDir + "/Pearl Jam/Binaural",
+				"src/test/resources/source/multimedia/test1.avi");
+		createTempFile(tempSrcDir + "/pearl jam/Binaural", "src/test/resources/source/multimedia/test1.avi");
+
+		DirectorySyncer syncer = new DirectorySyncer(tempSrcDir, tempTargetDir, true);
+		Map<String, Path> targetMap = syncer.buildTargetFileMap();
+		assertEquals(1, targetMap.size());
+		assertEquals(1, syncer.getHashedTargetMap().size());
+		Report report = syncer.findAndHandleSourcesInTargetMap(targetMap);
+		assertEquals(0, report.getNoOfNewFiles());
+		assertEquals(0, report.getNoOfRelocatedFiles());
+		assertEquals(0, report.getNoOfChangedFiles());
+		assertEquals("Got new dirs", 0, report.getNoOfNewDirectories());
 	}
 
 	@Test
@@ -351,7 +377,7 @@ public class TestDirectorySyncer
 	{
 		Path path = new File(tempDir).toPath();
 		if (!Files.exists(path))
-			Files.createDirectory(path);
+			Files.createDirectories(path);
 		final Path source = new File(filePath).toPath();
 		Path target = new File(tempDir + "/" + source.getFileName()).toPath();
 		Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);

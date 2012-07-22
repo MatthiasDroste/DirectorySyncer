@@ -45,7 +45,6 @@ public class DirectorySyncer
 		IGNORE_FILES.addAll(Arrays.asList(new String[] { "thumbs.db", "desktop.ini" }));
 	}
 
-
 	public DirectorySyncer(String source, String target, boolean isSimulationMode)
 	{
 		this.source = new File(source).toPath();
@@ -68,7 +67,7 @@ public class DirectorySyncer
 					return super.visitFile(file, attrs);
 
 				report.countTargetFiles();
-				targetMap.put(target.relativize(file).toString(), file);
+				targetMap.put(target.relativize(file).toString().toLowerCase(), file);
 				Long hash = hash(file);
 				if (hash != null)
 				{
@@ -91,7 +90,7 @@ public class DirectorySyncer
 					return super.visitFile(file, attrs);
 
 				report.countSourceFiles();
-				Path targetPath = targetMap.get(source.relativize(file).toString());
+				Path targetPath = targetMap.get(source.relativize(file).toString().toLowerCase());
 				if (targetPath != null)
 				{
 					if (Files.size(file) != Files.size(targetPath))
@@ -251,7 +250,7 @@ public class DirectorySyncer
 	 * "non-changing" multimedia files are fake-hashed the length to increase speed. <br/>
 	 * All other files get a real hash.
 	 */
-	private Long hash(Path file) throws IOException
+	Long hash(Path file) throws IOException
 	{
 		if (NOHASH_FILES.contains(getFileEnding(file)))
 		{
@@ -307,5 +306,59 @@ public class DirectorySyncer
 	public Map<Long, List<Path>> getHashedTargetMap()
 	{
 		return Collections.unmodifiableMap(hashedTargetMap);
+	}
+
+	/**
+	 * If the content of a folder was moved to another location in the target, none of the files will be copied (->
+	 * relocated). However the whole directory tree is moved. As a result there are new empty directories in the target. <br/>
+	 * Remove them from the filesystem and the report.
+	 */
+	public Report cleanupDirs(Report report) throws IOException
+	{
+		List<Path> newDirectories = new ArrayList<Path>();
+		for (Path path : report.getNewDirectories())
+		{
+			newDirectories.add(path);
+		}
+		Collections.sort(newDirectories, new Comparator<Path>()
+		{
+			@Override
+			public int compare(Path o1, Path o2)
+			{
+				return o1.toString().length() > o2.toString().length() ? -1 : 1;
+			}
+		});
+		for (Path targetDir : newDirectories)
+		{
+			if (isDirectoryEmpty(targetDir))
+			{
+				if (!isDirectoryEmpty(source.resolve(target.relativize(targetDir))))
+				{
+					if (!this.isSimulationMode)
+					{
+						Files.delete(targetDir);
+					}
+					report.removeDirectory(targetDir);
+				}
+			}
+		}
+		return report;
+	}
+
+	private boolean isDirectoryEmpty(Path directory) throws IOException
+	{
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory))
+		{
+			Iterator<Path> iterator = stream.iterator();
+			boolean hasNext = iterator.hasNext();
+			if (hasNext)
+			{
+				do
+				{
+					System.out.println("next for: " + directory.toString() + ": " + iterator.next().toString());
+				} while (iterator.hasNext());
+			}
+			return !hasNext;
+		}
 	}
 }
