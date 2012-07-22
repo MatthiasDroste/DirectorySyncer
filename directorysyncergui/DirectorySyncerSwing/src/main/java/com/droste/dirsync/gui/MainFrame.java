@@ -224,6 +224,7 @@ public class MainFrame extends javax.swing.JFrame {
                         DirectorySyncer directorySyncer = new DirectorySyncer(sourceDir, targetDir, isSimulationMode);
                         Map<String, Path> targetMap = directorySyncer.buildTargetFileMap();
                         report = directorySyncer.findAndHandleSourcesInTargetMap(targetMap);
+                        report = directorySyncer.cleanupDirs(report);
                         this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                         new ReportDialog(MainFrame.this, false).setVisible(true);
                         //jDialog.setTitle("Syncing worked");
@@ -259,40 +260,7 @@ public class MainFrame extends javax.swing.JFrame {
         System.exit(0);
     }//GEN-LAST:event_cancelButtonActionPerformed
     
-    private Thread SyncRunner = new Thread() {
-
-        @Override
-        public void run() {
-            while (!isInterrupted()) {
-                System.out.println("Und er läuft und er läuft und er läuft");
-
-                try {
-                    final String sourceDir = sourceDirectoyField.getText();
-                    final String targetDir = targetDirectoryField.getText();
-                    if (sourceDir != null && targetDir != null) {
-                        DirectorySyncer directorySyncer = new DirectorySyncer(sourceDir, targetDir, isSimulationMode);
-                        Map<String, Path> targetMap = directorySyncer.buildTargetFileMap();
-                        report = directorySyncer.findAndHandleSourcesInTargetMap(targetMap);
-                        new ReportDialog(MainFrame.this, false).setVisible(true);
-                        //jDialog.setTitle("Syncing worked");
-                    }
-                //} catch (InterruptedException e) {
-                //    interrupt();
-                //    System.out.println("Unterbrechung in sleep()");
-                } catch (IOException e1) {
-                    JDialog jDialog = new JDialog(MainFrame.this);
-                    jDialog.setTitle("Syncing failed");
-                    new ReportDialog(MainFrame.this, false).setVisible(true);
-                } catch (Exception ex) {
-                    System.out.println(ex.getMessage());
-                    ex.printStackTrace();
-                }
-            }
-        }
-    };                             
-
-    
-
+           
     /**
      * @param args the command line arguments
      */
@@ -372,5 +340,9 @@ catch (javax.swing.UnsupportedLookAndFeelException ex) {
 
     boolean isSimulationMode() {
         return isSimulationMode;
+    }
+
+    void setSyncButtonVisible() {
+        synchronizeButton.setEnabled(true);
     }
 }
