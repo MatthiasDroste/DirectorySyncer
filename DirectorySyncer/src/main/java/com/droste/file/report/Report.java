@@ -148,4 +148,10 @@ public class Report {
     {
         return noOfRelocatedFiles;
     }
+
+	public void removeDirectory(Path directory)
+	{
+		noOfNewDirectories--;
+		newDirectories.remove(directory);
+	}
 }
