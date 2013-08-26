@@ -5,9 +5,8 @@
 package com.droste.dirsync.gui;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import javax.swing.table.AbstractTableModel;
 
 class SyncTableModel extends AbstractTableModel {
@@ -28,7 +27,7 @@ class SyncTableModel extends AbstractTableModel {
         this.tableHeader = toTableHeader("New Directories");
     }
 
-    @Override
+	@Override
     public int getRowCount() {
         return tableContent.size();
     }
